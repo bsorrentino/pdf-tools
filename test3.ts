@@ -65,11 +65,11 @@ function writeFileIndexed( content:any, index:number) {
 
 }
 
-var pdfjsLib = require("pdfjs-dist/es5/build/pdf.js");
+const pdfjsLib = require("pdfjs-dist/es5/build/pdf.js");
 
 // Some PDFs need external cmaps.
-var CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
-var CMAP_PACKED = true;
+const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
+const CMAP_PACKED = true;
 
 // Loading file from file system into typed array.
 var pdfPath =
@@ -91,20 +91,21 @@ loadingTask.promise
     // Get the first page.
     pdfDocument.getPage(pageIndex).then(function (page) {
       // Render the page on a Node canvas with 100% scale.
-      var viewport = page.getViewport({ scale: 1.0 });
-      var canvasFactory = new NodeCanvasFactory();
-      var canvasAndContext = canvasFactory.create(
+      const viewport = page.getViewport({ scale: 1.0 });
+      const canvasFactory = new NodeCanvasFactory();
+      const canvasAndContext = canvasFactory.create(
         viewport.width,
         viewport.height
       );
-      var renderContext = {
+
+      const renderContext = {
         canvasContext: canvasAndContext.context,
         viewport: viewport,
         canvasFactory: canvasFactory,
       };
 
-      var renderTask = page.render(renderContext);
-      renderTask.promise.then(function () {
+      const renderTask = page.render(renderContext);
+      renderTask.promise.then( () => {
         // Convert the canvas to an image buffer.
         var image = canvasAndContext.canvas.toBuffer();
 
