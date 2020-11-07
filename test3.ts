@@ -80,6 +80,7 @@ async function writeFileIndexed( img:PdfImage, content:Buffer, name:string) {
   const writeFile = promisify( fs.writeFile )
   try {
     await writeFile( path.join('bin', `${name}.png`), content )
+    //await writeFile( path.join('bin', `${name}.raw`), img.data )
   }
   catch( error ) {
     console.error( `Error:  ${error}`);
@@ -118,7 +119,7 @@ loadingTask.promise
             const op = ops.argsArray[j][0];
 
             const img = page.objs.get(op) as PdfImage;
-            console.log(img.kind)
+            //console.log(img.kind)
 
             const scale = img.width / page._pageInfo.view[2];
 
@@ -138,7 +139,7 @@ loadingTask.promise
               canvasFactory: canvasFactory,
             };
     
-            await  page.render(renderContext);
+            await page.render(renderContext).promise;
             
             const content = canvasAndContext.canvas.toBuffer();
     
