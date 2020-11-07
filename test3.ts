@@ -31,10 +31,16 @@ interface CanvasObject  {
   toBuffer():Buffer 
 } 
 
+enum PDFImageKind {
+    GRAYSCALE_1BPP = 1,
+    RGB_24BPP =  2,
+    RGBA_32BPP = 3
+}
+
 type PdfImage = {
   width:number
   height:number
-  kind: number
+  kind: PDFImageKind
   data:Uint8ClampedArray
 }
 
@@ -80,7 +86,20 @@ async function writeFileIndexed( img:PdfImage, content:Buffer, name:string) {
   const writeFile = promisify( fs.writeFile )
   try {
     await writeFile( path.join('bin', `${name}.png`), content )
-    //await writeFile( path.join('bin', `${name}.raw`), img.data )
+    //let base64Image = new Buffer(img.data, 'binary').toString('base64');
+    let base64Image = Buffer.from(img.data).toString('base64');
+
+    const html = `
+    <html>
+    <body>
+    <div>
+        <p>Translated</p>
+        <img src="data:image/png;base64, ${base64Image}" />
+    </div>
+    </body>
+    </html>
+    `
+    await writeFile( path.join('bin', `${name}.html`), html )
   }
   catch( error ) {
     console.error( `Error:  ${error}`);
