@@ -48,12 +48,9 @@ NodeCanvasFactory.prototype = {
   },
 };
 
-function writeFileIndexed( content:any, index:number) {
+function writeFileIndexed( content:any, name:string) {
 
-	const ordinal = `00${index}`.slice(-3)
-	const name = `image-${ordinal}.png`
-
-  fs.writeFile(name, content, (error) => {
+  fs.writeFile(`${name}.png`, content, (error) => {
     if (error) {
       console.error("Error: " + error);
     } else {
@@ -93,6 +90,7 @@ loadingTask.promise
 
       	page.getOperatorList().then( ops => {
 
+          console.dir( ops )
           for (let j=0; j < ops.fnArray.length; j++) {
 			
             if (ops.fnArray[j] == pdfjsLib.OPS.paintJpegXObject || ops.fnArray[j] == pdfjsLib.OPS.paintImageXObject) {
@@ -100,7 +98,7 @@ loadingTask.promise
               const op = ops.argsArray[j][0];
   
               const img = page.objs.get(op);
-               const scale = img.width / page._pageInfo.view[2];
+              const scale = img.width / page._pageInfo.view[2];
   
                // Render the page on a Node canvas with 100% scale.
               const viewport = page.getViewport({ scale: 1.0 });
@@ -122,7 +120,7 @@ loadingTask.promise
                 // Convert the canvas to an image buffer.
                 var image = canvasAndContext.canvas.toBuffer();
       
-                writeFileIndexed( image, pageIndex)
+                writeFileIndexed( image, op)
       
               });
             }
