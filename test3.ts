@@ -13,16 +13,40 @@
  * limitations under the License.
  */
 
-var Canvas = require("canvas");
-var assert = require("assert").strict;
 import fs from 'fs'
 import path from 'path'
 import { promisify } from 'util'
+import assert = require('assert')
 
+const Canvas = require("canvas")
+import pdfjsLib = require('pdfjs-dist/es5/build/pdf.js')
 
-function NodeCanvasFactory() {}
-NodeCanvasFactory.prototype = {
-  create: function NodeCanvasFactory_create(width, height) {
+// Some PDFs need external cmaps.
+const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
+const CMAP_PACKED = true;
+
+interface CanvasObject  { 
+  width:number
+  height:number
+  toBuffer():Buffer 
+} 
+
+type PdfImage = {
+  width:number
+  height:number
+  kind: number
+  data:Uint8ClampedArray
+}
+
+type CanvasContext2D = any
+
+type CanvasAndContext = {
+  canvas: CanvasObject,
+  context: CanvasContext2D,
+}
+class NodeCanvasFactory {
+
+  create(width:number, height:number):CanvasAndContext {
     assert(width > 0 && height > 0, "Invalid canvas size");
     var canvas = Canvas.createCanvas(width, height);
     var context = canvas.getContext("2d");
@@ -30,16 +54,16 @@ NodeCanvasFactory.prototype = {
       canvas: canvas,
       context: context,
     };
-  },
+  }
 
-  reset: function NodeCanvasFactory_reset(canvasAndContext, width, height) {
+  reset(canvasAndContext:CanvasAndContext, width:number, height:number) {
     assert(canvasAndContext.canvas, "Canvas is not specified");
     assert(width > 0 && height > 0, "Invalid canvas size");
     canvasAndContext.canvas.width = width;
     canvasAndContext.canvas.height = height;
-  },
+  }
 
-  destroy: function NodeCanvasFactory_destroy(canvasAndContext) {
+  destroy(canvasAndContext:CanvasAndContext) {
     assert(canvasAndContext.canvas, "Canvas is not specified");
 
     // Zeroing the width and height cause Firefox to release graphics
@@ -48,10 +72,10 @@ NodeCanvasFactory.prototype = {
     canvasAndContext.canvas.height = 0;
     canvasAndContext.canvas = null;
     canvasAndContext.context = null;
-  },
-};
+  }
+}
 
-async function writeFileIndexed( content:any, name:string) {
+async function writeFileIndexed( img:PdfImage, content:Buffer, name:string) {
 
   const writeFile = promisify( fs.writeFile )
   try {
@@ -62,12 +86,6 @@ async function writeFileIndexed( content:any, name:string) {
   }
 
 }
-
-const pdfjsLib = require("pdfjs-dist/es5/build/pdf.js");
-
-// Some PDFs need external cmaps.
-const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
-const CMAP_PACKED = true;
 
 // Loading file from file system into typed array.
 var pdfPath = process.argv[2] || "guidelines.pdf";
@@ -81,7 +99,7 @@ var loadingTask = pdfjsLib.getDocument({
   cMapPacked: CMAP_PACKED,
 });
 loadingTask.promise
-  .then( pdfDocument => {
+  .then( async pdfDocument => {
     console.log("# PDF document loaded.");
 
     let pages = pdfDocument._pdfInfo.numPages;
@@ -89,46 +107,48 @@ loadingTask.promise
 	  for (let i=1; i <= pages; i++) {
 
     // Get the first page.
-      pdfDocument.getPage(i).then( page => {
+      const page = await pdfDocument.getPage(i)
 
-      	page.getOperatorList().then( async ops => {
+      const ops = await page.getOperatorList()
 
-          for (let j=0; j < ops.fnArray.length; j++) {
-			
-            if (ops.fnArray[j] == pdfjsLib.OPS.paintJpegXObject || ops.fnArray[j] == pdfjsLib.OPS.paintImageXObject) {
-          
-              const op = ops.argsArray[j][0];
-  
-              const img = page.objs.get(op);
-              const scale = img.width / page._pageInfo.view[2];
-  
-               // Render the page on a Node canvas with 100% scale.
-              const viewport = page.getViewport({ scale: scale });
-              
-              const canvasFactory = new NodeCanvasFactory();
-              
-              const canvasAndContext = canvasFactory.create(
-                img.width,
-                img.height
-              );
-              const renderContext = {
-                canvasContext: canvasAndContext.context,
-                viewport: viewport,
-                canvasFactory: canvasFactory,
-              };
-      
-              await  page.render(renderContext);
-              
-              const image = canvasAndContext.canvas.toBuffer();
-      
-              await writeFileIndexed( image, op)
+      for (let j=0; j < ops.fnArray.length; j++) {
     
-            }
-          }
-  
-        });
+          if (ops.fnArray[j] == pdfjsLib.OPS.paintJpegXObject || ops.fnArray[j] == pdfjsLib.OPS.paintImageXObject) {
+        
+            const op = ops.argsArray[j][0];
 
-    });
+            const img = page.objs.get(op) as PdfImage;
+            console.log(img.kind)
+
+            const scale = img.width / page._pageInfo.view[2];
+
+              // Render the page on a Node canvas with 100% scale.
+            const viewport = page.getViewport({ scale: scale });
+            
+            const canvasFactory = new NodeCanvasFactory();
+            
+            const canvasAndContext = canvasFactory.create(
+              img.width,
+              img.height
+            );
+
+            const renderContext = {
+              canvasContext: canvasAndContext.context,
+              viewport: viewport,
+              canvasFactory: canvasFactory,
+            };
+    
+            await  page.render(renderContext);
+            
+            const content = canvasAndContext.canvas.toBuffer();
+    
+            await writeFileIndexed( img, content, op)
+  
+        }
+
+      }
+
+    
   }
   })
   .catch(function (reason) {
