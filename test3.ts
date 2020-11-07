@@ -72,8 +72,8 @@ const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
 
 // Loading file from file system into typed array.
-var pdfPath =
-  process.argv[2] || "guidelines.pdf";
+var pdfPath = process.argv[2] || "guidelines.pdf";
+
 var data = new Uint8Array(fs.readFileSync(pdfPath));
 
 // Load the PDF file.
@@ -83,35 +83,54 @@ var loadingTask = pdfjsLib.getDocument({
   cMapPacked: CMAP_PACKED,
 });
 loadingTask.promise
-  .then(function (pdfDocument) {
+  .then( pdfDocument => {
     console.log("# PDF document loaded.");
 
     const pageIndex = 25
 
     // Get the first page.
-    pdfDocument.getPage(pageIndex).then(function (page) {
-      // Render the page on a Node canvas with 100% scale.
-      const viewport = page.getViewport({ scale: 1.0 });
-      const canvasFactory = new NodeCanvasFactory();
-      const canvasAndContext = canvasFactory.create(
-        viewport.width,
-        viewport.height
-      );
+    pdfDocument.getPage(pageIndex).then( page => {
 
-      const renderContext = {
-        canvasContext: canvasAndContext.context,
-        viewport: viewport,
-        canvasFactory: canvasFactory,
-      };
+      	page.getOperatorList().then( ops => {
 
-      const renderTask = page.render(renderContext);
-      renderTask.promise.then( () => {
-        // Convert the canvas to an image buffer.
-        var image = canvasAndContext.canvas.toBuffer();
+          for (let j=0; j < ops.fnArray.length; j++) {
+			
+            if (ops.fnArray[j] == pdfjsLib.OPS.paintJpegXObject || ops.fnArray[j] == pdfjsLib.OPS.paintImageXObject) {
+          
+              const op = ops.argsArray[j][0];
+  
+              const img = page.objs.get(op);
+               const scale = img.width / page._pageInfo.view[2];
+  
+               // Render the page on a Node canvas with 100% scale.
+              const viewport = page.getViewport({ scale: 1.0 });
+              
+              const canvasFactory = new NodeCanvasFactory();
+              
+              const canvasAndContext = canvasFactory.create(
+                viewport.width,
+                viewport.height
+              );
+              const renderContext = {
+                canvasContext: canvasAndContext.context,
+                viewport: viewport,
+                canvasFactory: canvasFactory,
+              };
+      
+              const renderTask = page.render(renderContext);
+              renderTask.promise.then( () => {
+                // Convert the canvas to an image buffer.
+                var image = canvasAndContext.canvas.toBuffer();
+      
+                writeFileIndexed( image, pageIndex)
+      
+              });
+            }
+          }
+  
+        });
+		
 
-        writeFileIndexed( image, pageIndex)
-
-      });
     });
   })
   .catch(function (reason) {
