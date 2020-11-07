@@ -17,6 +17,8 @@ var Canvas = require("canvas");
 var assert = require("assert").strict;
 import fs from 'fs'
 import path from 'path'
+import { promisify } from 'util'
+
 
 function NodeCanvasFactory() {}
 NodeCanvasFactory.prototype = {
@@ -49,15 +51,15 @@ NodeCanvasFactory.prototype = {
   },
 };
 
-function writeFileIndexed( content:any, name:string) {
+async function writeFileIndexed( content:any, name:string) {
 
-  fs.writeFile( path.join('bin', `${name}.png`), content, (error) => {
-    if (error) {
-      console.error( `Error:  ${error}`);
-    } else {
-      console.log('Finished converting first page of PDF file to a PNG image.');
-    }
-  });
+  const writeFile = promisify( fs.writeFile )
+  try {
+    await writeFile( path.join('bin', `${name}.png`), content )
+  }
+  catch( error ) {
+    console.error( `Error:  ${error}`);
+  }
 
 }
 
@@ -89,7 +91,7 @@ loadingTask.promise
     // Get the first page.
       pdfDocument.getPage(i).then( page => {
 
-      	page.getOperatorList().then( ops => {
+      	page.getOperatorList().then( async ops => {
 
           for (let j=0; j < ops.fnArray.length; j++) {
 			
@@ -115,14 +117,12 @@ loadingTask.promise
                 canvasFactory: canvasFactory,
               };
       
-              const renderTask = page.render(renderContext);
-              renderTask.promise.then( () => {
-                // Convert the canvas to an image buffer.
-                const image = canvasAndContext.canvas.toBuffer();
+              await  page.render(renderContext);
+              
+              const image = canvasAndContext.canvas.toBuffer();
       
-                writeFileIndexed( image, op)
-      
-              });
+              await writeFileIndexed( image, op)
+    
             }
           }
   
