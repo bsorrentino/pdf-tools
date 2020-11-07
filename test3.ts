@@ -16,6 +16,7 @@
 var Canvas = require("canvas");
 var assert = require("assert").strict;
 import fs from 'fs'
+import path from 'path'
 
 function NodeCanvasFactory() {}
 NodeCanvasFactory.prototype = {
@@ -50,13 +51,11 @@ NodeCanvasFactory.prototype = {
 
 function writeFileIndexed( content:any, name:string) {
 
-  fs.writeFile(`${name}.png`, content, (error) => {
+  fs.writeFile( path.join('bin', `${name}.png`), content, (error) => {
     if (error) {
-      console.error("Error: " + error);
+      console.error( `Error:  ${error}`);
     } else {
-      console.log(
-        "Finished converting first page of PDF file to a PNG image."
-      );
+      console.log('Finished converting first page of PDF file to a PNG image.');
     }
   });
 
@@ -83,14 +82,15 @@ loadingTask.promise
   .then( pdfDocument => {
     console.log("# PDF document loaded.");
 
-    const pageIndex = 25
+    let pages = pdfDocument._pdfInfo.numPages;
+
+	  for (let i=1; i <= pages; i++) {
 
     // Get the first page.
-    pdfDocument.getPage(pageIndex).then( page => {
+      pdfDocument.getPage(i).then( page => {
 
       	page.getOperatorList().then( ops => {
 
-          console.dir( ops )
           for (let j=0; j < ops.fnArray.length; j++) {
 			
             if (ops.fnArray[j] == pdfjsLib.OPS.paintJpegXObject || ops.fnArray[j] == pdfjsLib.OPS.paintImageXObject) {
@@ -101,13 +101,13 @@ loadingTask.promise
               const scale = img.width / page._pageInfo.view[2];
   
                // Render the page on a Node canvas with 100% scale.
-              const viewport = page.getViewport({ scale: 1.0 });
+              const viewport = page.getViewport({ scale: scale });
               
               const canvasFactory = new NodeCanvasFactory();
               
               const canvasAndContext = canvasFactory.create(
-                viewport.width,
-                viewport.height
+                img.width,
+                img.height
               );
               const renderContext = {
                 canvasContext: canvasAndContext.context,
@@ -118,7 +118,7 @@ loadingTask.promise
               const renderTask = page.render(renderContext);
               renderTask.promise.then( () => {
                 // Convert the canvas to an image buffer.
-                var image = canvasAndContext.canvas.toBuffer();
+                const image = canvasAndContext.canvas.toBuffer();
       
                 writeFileIndexed( image, op)
       
@@ -127,9 +127,9 @@ loadingTask.promise
           }
   
         });
-		
 
     });
+  }
   })
   .catch(function (reason) {
     console.log(reason);

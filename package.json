@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "parcel build index.ts --target node --out-dir bin",
-    "test:build" : "parcel build test3.ts --target node --out-dir bin",
+    "test:build": "parcel build test3.ts --target node --out-dir bin",
     "test:run": "node bin/test3.js"
   },
   "author": "bsorrentino <bartolomeo.sorrentino@gmail.com> (http://soulsoftware-bsc.blogspot.it/)",
