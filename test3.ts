@@ -148,10 +148,7 @@ loadingTask.promise
         }
 
       }
-
     
-  }
+    }
   })
-  .catch(function (reason) {
-    console.log(reason);
-  });
+  .catch( reason => console.log(reason) );
