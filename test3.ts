@@ -15,7 +15,7 @@
 
 var Canvas = require("canvas");
 var assert = require("assert").strict;
-var fs = require("fs");
+import fs from 'fs'
 
 function NodeCanvasFactory() {}
 NodeCanvasFactory.prototype = {
@@ -48,6 +48,23 @@ NodeCanvasFactory.prototype = {
   },
 };
 
+function writeFileIndexed( content:any, index:number) {
+
+	const ordinal = `00${index}`.slice(-3)
+	const name = `image-${ordinal}.png`
+
+  fs.writeFile(name, content, (error) => {
+    if (error) {
+      console.error("Error: " + error);
+    } else {
+      console.log(
+        "Finished converting first page of PDF file to a PNG image."
+      );
+    }
+  });
+
+}
+
 var pdfjsLib = require("pdfjs-dist/es5/build/pdf.js");
 
 // Some PDFs need external cmaps.
@@ -69,8 +86,10 @@ loadingTask.promise
   .then(function (pdfDocument) {
     console.log("# PDF document loaded.");
 
+    const pageIndex = 25
+
     // Get the first page.
-    pdfDocument.getPage(25).then(function (page) {
+    pdfDocument.getPage(pageIndex).then(function (page) {
       // Render the page on a Node canvas with 100% scale.
       var viewport = page.getViewport({ scale: 1.0 });
       var canvasFactory = new NodeCanvasFactory();
@@ -88,15 +107,9 @@ loadingTask.promise
       renderTask.promise.then(function () {
         // Convert the canvas to an image buffer.
         var image = canvasAndContext.canvas.toBuffer();
-        fs.writeFile("output.png", image, function (error) {
-          if (error) {
-            console.error("Error: " + error);
-          } else {
-            console.log(
-              "Finished converting first page of PDF file to a PNG image."
-            );
-          }
-        });
+
+        writeFileIndexed( image, pageIndex)
+
       });
     });
   })
