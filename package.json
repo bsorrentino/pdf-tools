@@ -1,12 +1,11 @@
 {
-  "name": "pdf2markdown",
+  "name": "extract-pdf-images",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "build": "parcel build index.ts --target node --out-dir bin",
-    "test:build": "parcel build test3.ts --target node --out-dir bin",
-    "test:run": "node bin/test3.js"
+    "start": "node bin/index.js"
   },
   "author": "bsorrentino <bartolomeo.sorrentino@gmail.com> (http://soulsoftware-bsc.blogspot.it/)",
   "license": "ISC",
