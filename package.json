@@ -1,0 +1,23 @@
+{
+  "name": "extract-pdf-images",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "parcel build index.ts --target node --out-dir bin",
+    "start": "node bin/index.js"
+  },
+  "author": "bsorrentino <bartolomeo.sorrentino@gmail.com> (http://soulsoftware-bsc.blogspot.it/)",
+  "license": "ISC",
+  "dependencies": {
+    "canvas": "^2.6.1",
+    "jimp": "^0.16.1",
+    "pdfjs-dist": "^2.5.207"
+  },
+  "devDependencies": {
+    "@types/pdfjs-dist": "^2.1.6",
+    "npx-run": "^2.1.2",
+    "parcel-bundler": "^1.12.4",
+    "typescript": "^4.0.5"
+  }
+}
