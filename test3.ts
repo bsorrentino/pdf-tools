@@ -18,6 +18,7 @@ import path from 'path'
 import { promisify } from 'util'
 import assert = require('assert')
 
+const Jimp = require('jimp')
 const Canvas = require("canvas")
 import pdfjsLib = require('pdfjs-dist/es5/build/pdf.js')
 
@@ -87,19 +88,20 @@ async function writeFileIndexed( img:PdfImage, content:Buffer, name:string) {
   try {
     await writeFile( path.join('bin', `${name}.png`), content )
 
-    // let base64Image = Buffer.from(img.data).toString('base64');
-
-    // const html = `
-    // <html>
-    // <body>
-    // <div>
-    //     <p>Translate</p>
-    //     <img src="data:image/png;base64, ${base64Image}" />
-    // </div>
-    // </body>
-    // </html>
-    // `
-    await writeFile( path.join('bin', `${name}.raw`), img.data )
+    const jimg = new Jimp(img.width, img.height)
+    const bytesPerPixel = 3
+    const byteWidth = img.width
+    for (var x=0; x<img.width; x++) {
+      for (var y=0; y<img.height; y++) {
+          var index = (y * byteWidth) + (x * bytesPerPixel);
+          var r = img.data[index];
+          var g = img.data[index+1];
+          var b = img.data[index+2];
+          var num = (r*256) + (g*256*256) + (b*256*256*256) + 255;
+          jimg.setPixelColor(num, x, y);
+      }
+    }
+    jimg.write(path.join('bin', `${name}.raw.png`))
   }
   catch( error ) {
     console.error( `Error:  ${error}`);

@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "canvas": "^2.6.1",
+    "jimp": "^0.16.1",
     "pdfjs-dist": "^2.5.207"
   },
   "devDependencies": {
