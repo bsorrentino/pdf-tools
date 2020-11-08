@@ -84,24 +84,45 @@ class NodeCanvasFactory {
 
 async function writeFileIndexed( img:PdfImage, content:Buffer, name:string) {
 
-  const writeFile = promisify( fs.writeFile )
+  //console.log( `image ${name} - kind: ${img.kind}`)
   try {
-    await writeFile( path.join('bin', `${name}.png`), content )
+
+    let bytesPerPixel:number 
+    switch( img.kind ) {
+      case PDFImageKind.RGB_24BPP:
+        bytesPerPixel = 3
+        break
+      case PDFImageKind.RGBA_32BPP:
+        bytesPerPixel = 4
+        break
+      case PDFImageKind.GRAYSCALE_1BPP:
+        assert( `kind ${img.kind} is not supported yet!`)
+        bytesPerPixel = 1
+        break
+      default:
+        assert( `kind ${img.kind} is not supported at all!`)
+        break
+
+    }
 
     const jimg = new Jimp(img.width, img.height)
-    const bytesPerPixel = 3
-    const byteWidth = img.width
+    
+    const byteWidth = (img.width*bytesPerPixel)
+
     for (var x=0; x<img.width; x++) {
       for (var y=0; y<img.height; y++) {
-          var index = (y * byteWidth) + (x * bytesPerPixel);
-          var r = img.data[index];
-          var g = img.data[index+1];
-          var b = img.data[index+2];
-          var num = (r*256) + (g*256*256) + (b*256*256*256) + 255;
+
+          const index = (y * byteWidth) + (x * bytesPerPixel);
+          const r = img.data[index];
+          const g = img.data[index+1];
+          const b = img.data[index+2];    
+          const alpha = bytesPerPixel == 3 ? 255 : img.data[index+3]
+
+          const num = (r*256) + (g*256*256) + (b*256*256*256) + alpha;
           jimg.setPixelColor(num, x, y);
       }
     }
-    jimg.write(path.join('bin', `${name}.raw.png`))
+    jimg.write(path.join('bin', `${name}.png`))
   }
   catch( error ) {
     console.error( `Error:  ${error}`);
