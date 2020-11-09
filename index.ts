@@ -1,6 +1,8 @@
 
 import fs from 'fs'
 import path from 'path'
+import { promisify } from 'util'
+
 import assert = require('assert')
 
 import Jimp = require('jimp')
@@ -11,16 +13,13 @@ import pdfjsLib = require('pdfjs-dist/es5/build/pdf.js')
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
 
-interface CanvasObject  { 
-  width:number
-  height:number
-  toBuffer():Buffer 
-} 
+const readFile = promisify( fs.readFile )
+const writeFile = promisify( fs.writeFile )
 
 enum PDFImageKind {
-    GRAYSCALE_1BPP = 1,
-    RGB_24BPP =  2,
-    RGBA_32BPP = 3
+  GRAYSCALE_1BPP = 1,
+  RGB_24BPP =  2,
+  RGBA_32BPP = 3
 }
 
 type PdfImage = {
@@ -30,12 +29,46 @@ type PdfImage = {
   data:Uint8ClampedArray
 }
 
+type PdfViewport = {
+  width: number
+  height: number 
+}
+
+type AsyncTask<T> = {
+  promise:Promise<T>
+}
+
+interface PdfPage {
+  _pageIndex:number
+
+  objs:any
+
+  getViewport( options:{ scale:number } ):PdfViewport
+  
+  getOperatorList():Promise<any>
+  
+  render( params:{
+    canvasContext:any,
+    viewport:PdfViewport,
+    canvasFactory:any,
+  }):AsyncTask<void>
+}
+
+interface CanvasObject  { 
+  width:number
+  height:number
+  toBuffer():Buffer 
+} 
+
+
+
 type CanvasContext2D = any
 
 type CanvasAndContext = {
   canvas: CanvasObject,
   context: CanvasContext2D,
 }
+
 class NodeCanvasFactory {
 
   create(width:number, height:number):CanvasAndContext {
@@ -67,7 +100,32 @@ class NodeCanvasFactory {
   }
 }
 
-async function writeFileIndexed( img:PdfImage, content:Buffer, name:string) {
+async function writePageAsImage( page:PdfPage ) {
+      // Render the page on a Node canvas with 100% scale.
+      const viewport = page.getViewport({ scale: 1.0 });
+    
+      const canvasFactory = new NodeCanvasFactory();
+      
+      const canvasAndContext = canvasFactory.create(
+        viewport.width,
+        viewport.height
+      );
+
+      const renderContext = {
+        canvasContext: canvasAndContext.context,
+        viewport: viewport,
+        canvasFactory: canvasFactory,
+      };
+
+      await page.render(renderContext).promise;
+      
+      const content = canvasAndContext.canvas.toBuffer();
+      
+      //console.dir( page )
+      await writeFile( path.join('bin', `page-${page._pageIndex}.png`), content )  
+}
+
+async function writePageImage( img:PdfImage, name:string) {
 
   //console.log( `image ${name} - kind: ${img.kind}`)
   try {
@@ -118,27 +176,30 @@ async function writeFileIndexed( img:PdfImage, content:Buffer, name:string) {
 
 }
 
-// Loading file from file system into typed array.
-var pdfPath = process.argv[2] || "guidelines.pdf";
+/**
+ * 
+ * @param pdfPath 
+ */
+async function main(pdfPath:string) {
 
-var data = new Uint8Array(fs.readFileSync(pdfPath));
+  try {
 
-// Load the PDF file.
-var loadingTask = pdfjsLib.getDocument({
-  data: data,
-  cMapUrl: CMAP_URL,
-  cMapPacked: CMAP_PACKED,
-});
-loadingTask.promise
-  .then( async pdfDocument => {
+    const data = new Uint8Array( await readFile(pdfPath))
+
+    const pdfDocument = await pdfjsLib.getDocument({
+      data: data,
+      cMapUrl: CMAP_URL,
+      cMapPacked: CMAP_PACKED,
+    }).promise
+
     console.log("# PDF document loaded.");
 
-    let pages = pdfDocument._pdfInfo.numPages;
+    const pages = pdfDocument._pdfInfo.numPages;
 
-	  for (let i=1; i <= pages; i++) {
+    for (let i=1; i <= pages; i++) {
 
-    // Get the first page.
-      const page = await pdfDocument.getPage(i)
+      // Get the first page.
+      const page = await pdfDocument.getPage(i) as PdfPage
 
       const ops = await page.getOperatorList()
 
@@ -149,36 +210,27 @@ loadingTask.promise
             const op = ops.argsArray[j][0];
 
             const img = page.objs.get(op) as PdfImage;
-            //console.log(img.kind)
 
-            const scale = img.width / page._pageInfo.view[2];
+            //const scale = img.width / page._pageInfo.view[2];
+            
+            await writePageImage( img, op)
+            // await writePageAsImage( page )
 
-              // Render the page on a Node canvas with 100% scale.
-            const viewport = page.getViewport({ scale: scale });
-            
-            const canvasFactory = new NodeCanvasFactory();
-            
-            const canvasAndContext = canvasFactory.create(
-              img.width,
-              img.height
-            );
-
-            const renderContext = {
-              canvasContext: canvasAndContext.context,
-              viewport: viewport,
-              canvasFactory: canvasFactory,
-            };
-    
-            await page.render(renderContext).promise;
-            
-            const content = canvasAndContext.canvas.toBuffer();
-    
-            await writeFileIndexed( img, content, op)
-  
         }
 
       }
     
     }
-  })
-  .catch( reason => console.log(reason) );
+  }
+  catch( reason ) {
+    console.log(reason) 
+  }
+}
+
+  // STARTUP CODE
+
+  (async () => {
+    const pdfPath = process.argv[2] || "guidelines.pdf";
+
+    await main( pdfPath )
+  })()
