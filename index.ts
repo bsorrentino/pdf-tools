@@ -1,4 +1,3 @@
-
 import 'pdfjs-dist/es5/build/pdf.js';
 import fs from 'fs'
 import path from 'path'
@@ -9,8 +8,8 @@ import assert = require('assert')
 import Jimp = require('jimp')
 const Canvas = require("canvas")
 
-import { Pdf } from './pdfjs'
 import { PDFPageProxy, getDocument, OPS } from 'pdfjs-dist'
+import { Pdf } from './pdfjs';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -18,9 +17,6 @@ const CMAP_PACKED = true;
 
 const readFile = promisify( fs.readFile )
 const writeFile = promisify( fs.writeFile )
-
-
-
 
 interface CanvasObject  { 
   width:number
@@ -160,7 +156,9 @@ async function main(pdfPath:string) {
       cMapPacked: CMAP_PACKED,
     }).promise
 
-    console.log("# PDF document loaded.");
+    const metadata = await pdfDocument.getMetadata()
+
+    console.log("# PDF document loaded.", metadata.info.PDFFormatVersion);
 
     const pages = pdfDocument.numPages;
 

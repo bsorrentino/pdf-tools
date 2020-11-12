@@ -1,6 +1,6 @@
 /// <reference types="pdfjs-dist" />
 
-import { PDFPageProxy } from "pdfjs-dist";
+import { PDFPageProxy, PDFDocumentProxy, PDFPromise } from "pdfjs-dist";
 
 declare namespace Pdf {
 
@@ -98,29 +98,46 @@ declare namespace Pdf {
         constructPath: number
     }
 
-    interface Ops {
+    declare interface Ops {
         fnArray:Array<integer>
 
         argsArray: string[][]
     }
 
-    enum ImageKind {
+    declare enum ImageKind {
         GRAYSCALE_1BPP = 1,
         RGB_24BPP =  2,
         RGBA_32BPP = 3
     }
 
-    interface Image  {
+   declare interface Image  {
         width:number
         height:number
         kind: ImageKind
         data:Uint8ClampedArray
     }
     
-    interface Obj {
+    declare interface Obj {
 
         get( op:string ):Image|any
     }
+
+    declare interface Metadata {
+
+        info:{ 
+            PDFFormatVersion: string,
+            IsLinearized: boolean,
+            IsAcroFormPresent: boolean,
+            IsXFAPresent: boolean,
+            IsCollectionPresent: boolean,
+            Producer: string,
+            Creator: string,
+            CreationDate: string,
+            ModDate: string 
+        },
+        contentDispositionFilename: null  
+    }
+
 }
 
 //
@@ -136,6 +153,11 @@ declare module "pdfjs-dist" {
         objs: Pdf.Obj
 
         getOperatorList(): Promise<Pdf.Ops>
+    }
+
+    interface PDFDocumentProxy {
+
+        getMetadata():PDFPromise<Pdf.Metadata>
     }
 
     var OPS: Pdf.OPS
