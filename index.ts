@@ -1,4 +1,5 @@
 
+import 'pdfjs-dist/es5/build/pdf.js';
 import fs from 'fs'
 import path from 'path'
 import { promisify } from 'util'
@@ -7,7 +8,9 @@ import assert = require('assert')
 
 import Jimp = require('jimp')
 const Canvas = require("canvas")
-import pdfjsLib = require('pdfjs-dist/es5/build/pdf.js')
+
+import { Pdf } from './pdfjs'
+import { PDFPageProxy, getDocument, OPS } from 'pdfjs-dist'
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -16,43 +19,8 @@ const CMAP_PACKED = true;
 const readFile = promisify( fs.readFile )
 const writeFile = promisify( fs.writeFile )
 
-enum PDFImageKind {
-  GRAYSCALE_1BPP = 1,
-  RGB_24BPP =  2,
-  RGBA_32BPP = 3
-}
 
-type PdfImage = {
-  width:number
-  height:number
-  kind: PDFImageKind
-  data:Uint8ClampedArray
-}
 
-type PdfViewport = {
-  width: number
-  height: number 
-}
-
-type AsyncTask<T> = {
-  promise:Promise<T>
-}
-
-interface PdfPage {
-  _pageIndex:number
-
-  objs:any
-
-  getViewport( options:{ scale:number } ):PdfViewport
-  
-  getOperatorList():Promise<any>
-  
-  render( params:{
-    canvasContext:any,
-    viewport:PdfViewport,
-    canvasFactory:any,
-  }):AsyncTask<void>
-}
 
 interface CanvasObject  { 
   width:number
@@ -95,12 +63,12 @@ class NodeCanvasFactory {
     // resources immediately, which can greatly reduce memory consumption.
     canvasAndContext.canvas.width = 0;
     canvasAndContext.canvas.height = 0;
-    canvasAndContext.canvas = null;
-    canvasAndContext.context = null;
+    //canvasAndContext.canvas = null;
+    //canvasAndContext.context = null;
   }
 }
 
-async function writePageAsImage( page:PdfPage ) {
+async function writePageAsImage( page:PDFPageProxy ) {
       // Render the page on a Node canvas with 100% scale.
       const viewport = page.getViewport({ scale: 1.0 });
     
@@ -122,23 +90,23 @@ async function writePageAsImage( page:PdfPage ) {
       const content = canvasAndContext.canvas.toBuffer();
       
       //console.dir( page )
-      await writeFile( path.join('bin', `page-${page._pageIndex}.png`), content )  
+      await writeFile( path.join('bin', `page-${page.pageIndex}.png`), content )  
 }
 
-async function writePageImage( img:PdfImage, name:string) {
+async function writePageImage( img:Pdf.Image, name:string) {
 
   //console.log( `image ${name} - kind: ${img.kind}`)
   try {
 
-    let bytesPerPixel:number 
+    let bytesPerPixel = 0 
     switch( img.kind ) {
-      case PDFImageKind.RGB_24BPP:
+      case Pdf.ImageKind.RGB_24BPP:
         bytesPerPixel = 3
         break
-      case PDFImageKind.RGBA_32BPP:
+      case Pdf.ImageKind.RGBA_32BPP:
         bytesPerPixel = 4
         break
-      case PDFImageKind.GRAYSCALE_1BPP:
+      case Pdf.ImageKind.GRAYSCALE_1BPP:
         assert( `kind ${img.kind} is not supported yet!`)
         bytesPerPixel = 1
         break
@@ -186,7 +154,7 @@ async function main(pdfPath:string) {
 
     const data = new Uint8Array( await readFile(pdfPath))
 
-    const pdfDocument = await pdfjsLib.getDocument({
+    const pdfDocument = await getDocument({
       data: data,
       cMapUrl: CMAP_URL,
       cMapPacked: CMAP_PACKED,
@@ -194,22 +162,22 @@ async function main(pdfPath:string) {
 
     console.log("# PDF document loaded.");
 
-    const pages = pdfDocument._pdfInfo.numPages;
+    const pages = pdfDocument.numPages;
 
     for (let i=1; i <= pages; i++) {
 
       // Get the first page.
-      const page = await pdfDocument.getPage(i) as PdfPage
+      const page = await pdfDocument.getPage(i) 
 
       const ops = await page.getOperatorList()
 
       for (let j=0; j < ops.fnArray.length; j++) {
     
-          if (ops.fnArray[j] == pdfjsLib.OPS.paintJpegXObject || ops.fnArray[j] == pdfjsLib.OPS.paintImageXObject) {
+          if (ops.fnArray[j] == OPS.paintJpegXObject || ops.fnArray[j] == OPS.paintImageXObject) {
         
             const op = ops.argsArray[j][0];
 
-            const img = page.objs.get(op) as PdfImage;
+            const img = page.objs.get(op) as Pdf.Image;
 
             //const scale = img.width / page._pageInfo.view[2];
             
