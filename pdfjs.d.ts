@@ -2,9 +2,76 @@
 
 import { PDFPageProxy, PDFDocumentProxy, PDFPromise } from "pdfjs-dist";
 
-declare namespace Pdf {
+//
+// extend third-party declaration files
+//
+// @see https://stackoverflow.com/a/46494277/521197
+//
+// refer to 'Module Augmentation'  https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
+//
+declare module "pdfjs-dist" {
 
-    declare interface OPS {
+    enum PDFImageKind {
+        GRAYSCALE_1BPP = 1,
+        RGB_24BPP =  2,
+        RGBA_32BPP = 3
+    }
+
+    interface PDFJSUtilStatic {
+        transform( t1:any, t2:any ):number[4]
+    }
+    
+   interface PDFImage  {
+        width:number
+        height:number
+        kind: PDFImageKind
+        data:Uint8ClampedArray
+    }
+    
+    interface PDFObj {
+
+        get( op:string ):PDFImage|any
+    }
+
+
+    interface PDFOps {
+        fnArray:Array<integer>
+
+        argsArray: string[][]
+    }
+
+    interface PDFMetadata {
+
+        info:{ 
+            PDFFormatVersion: string,
+            IsLinearized: boolean,
+            IsAcroFormPresent: boolean,
+            IsXFAPresent: boolean,
+            IsCollectionPresent: boolean,
+            Producer: string,
+            Creator: string,
+            CreationDate: string,
+            ModDate: string 
+        },
+        contentDispositionFilename: null  
+    }
+
+    interface PDFPageProxy {
+        objs: PDFObj
+
+        getOperatorList(): Promise<PDFOps>
+    }
+
+    interface PDFDocumentProxy {
+
+        getMetadata():PDFPromise<PDFMetadata>
+    }
+
+    interface PDFPageViewport {
+        transform:number[]
+    }
+
+    const OPS = {
         dependency: number,
         setLineWidth: number,
         setLineCap: number,
@@ -98,68 +165,5 @@ declare namespace Pdf {
         constructPath: number
     }
 
-    declare interface Ops {
-        fnArray:Array<integer>
-
-        argsArray: string[][]
-    }
-
-    declare enum ImageKind {
-        GRAYSCALE_1BPP = 1,
-        RGB_24BPP =  2,
-        RGBA_32BPP = 3
-    }
-
-   declare interface Image  {
-        width:number
-        height:number
-        kind: ImageKind
-        data:Uint8ClampedArray
-    }
-    
-    declare interface Obj {
-
-        get( op:string ):Image|any
-    }
-
-    declare interface Metadata {
-
-        info:{ 
-            PDFFormatVersion: string,
-            IsLinearized: boolean,
-            IsAcroFormPresent: boolean,
-            IsXFAPresent: boolean,
-            IsCollectionPresent: boolean,
-            Producer: string,
-            Creator: string,
-            CreationDate: string,
-            ModDate: string 
-        },
-        contentDispositionFilename: null  
-    }
-
-}
-
-//
-// extend third-party declaration files
-//
-// @see https://stackoverflow.com/a/46494277/521197
-//
-// refer to 'Module Augmentation'  https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
-//
-declare module "pdfjs-dist" {
-
-    interface PDFPageProxy {
-        objs: Pdf.Obj
-
-        getOperatorList(): Promise<Pdf.Ops>
-    }
-
-    interface PDFDocumentProxy {
-
-        getMetadata():PDFPromise<Pdf.Metadata>
-    }
-
-    var OPS: Pdf.OPS
 
 }
