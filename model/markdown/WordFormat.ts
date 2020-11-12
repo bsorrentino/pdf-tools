@@ -1,21 +1,11 @@
-import { Enum } from 'enumify';
+import { Enumify } from 'enumify';
 
 // The format of a word element
-export default class WordFormat extends Enum {
+export default class WordFormat extends Enumify {
+    constructor(public startSymbol: string, public endSymbol: string) { super() }
 
+    static BOLD = new WordFormat('**', '**')
+    static OBLIQUE = new WordFormat('_', '_')
+    static BOLD_OBLIQUE = new WordFormat('**_', '_**')
+    static _ = WordFormat.closeEnum()
 }
-
-WordFormat.initEnum({
-    BOLD: {
-        startSymbol: '**',
-        endSymbol: '**',
-    },
-    OBLIQUE: {
-        startSymbol: '_',
-        endSymbol: '_',
-    },
-    BOLD_OBLIQUE: {
-        startSymbol: '**_',
-        endSymbol: '_**',
-    }
-});

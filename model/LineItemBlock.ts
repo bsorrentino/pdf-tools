@@ -1,8 +1,9 @@
 import PageItem from './PageItem'
 import LineItem from './LineItem'
+import BlockType from './markdown/BlockType';
 
 // A block of LineItem[] within a Page
-export default class LineItemBlock extends PageItem {
+export default class LineItemBlock extends PageItem<BlockType> {
     items:Array<LineItem> = []
 
     constructor(options:any) {

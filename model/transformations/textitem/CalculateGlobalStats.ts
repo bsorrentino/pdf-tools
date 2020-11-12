@@ -3,18 +3,19 @@ import ParseResult from '../../ParseResult';
 import WordFormat from '../../markdown/WordFormat';
 
 export default class CalculateGlobalStats extends ToTextItemTransformation {
+    fontMap:any
 
-    constructor(fontMap) {
+    constructor(fontMap:any) {
         super("Calculate Statistics");
         this.fontMap = fontMap;
     }
 
     transform(parseResult:ParseResult) {
         // Parse heights
-        const heightToOccurrence = {};
-        const fontToOccurrence = {};
-        var maxHeight = 0;
-        var maxHeightFont;
+        const heightToOccurrence:any = {};
+        const fontToOccurrence:any = {};
+        let maxHeight = 0;
+        let maxHeightFont:number|undefined;
         parseResult.pages.forEach(page => {
             page.items.forEach(item => {
                 heightToOccurrence[item.height] = heightToOccurrence[item.height] ? heightToOccurrence[item.height] + 1 : 1;

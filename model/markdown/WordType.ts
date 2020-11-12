@@ -1,41 +1,55 @@
-import { Enum } from 'enumify';
+import { Enumify } from 'enumify';
+import LineItem from '../LineItem';
+import WordFormat from './WordFormat';
+
+type ToText = ( string:string ) => string
 
 // An Markdown word element
-export default class WordType extends Enum {
+export default class WordType extends Enumify {
+    toText:ToText
+    attachWithoutWhitespace:boolean
+    plainTextFormat: boolean
 
-}
+    constructor( options:{ toText:ToText, attachWithoutWhitespace?:boolean, plainTextFormat?:boolean} ) {
+        super()
 
-WordType.initEnum({
-    LINK: {
+        this.toText = options.toText
+        this.attachWithoutWhitespace = options.attachWithoutWhitespace || false
+        this.plainTextFormat = options.plainTextFormat || false
+    
+    }
+    static LINK = new WordType({
         toText(string) {
             return `[${string}](${string})`
         }
-    },
-    FOOTNOTE_LINK: {
+    })
+    static FOOTNOTE_LINK = new WordType({
         attachWithoutWhitespace: true,
         plainTextFormat: true,
         toText(string) {
             return `^${string}`
         // return `<sup>[${string}](#${string})</sup>`;
         }
-    },
-    FOOTNOTE: {
+    })
+    static FOOTNOTE = new WordType( {
         toText(string) {
             return `(^${string})`
         }
-    }
-});
+    })
 
-export function linesToText(lineItems, disableInlineFormats) {
+    static _ = WordType.closeEnum()
+}
+
+export function linesToText(lineItems:Array<LineItem>, disableInlineFormats:boolean) {
     var text = '';
-    var openFormat;
+    let openFormat:WordFormat|null;
 
     const closeFormat = () => {
-        text += openFormat.endSymbol;
+        text += openFormat?.endSymbol;
         openFormat = null;
     };
 
-    lineItems.forEach((line, lineIndex) => {
+    lineItems.forEach((line:LineItem, lineIndex) => {
         line.words.forEach((word, i) => {
             const wordType = word.type;
             const wordFormat = word.format;
@@ -66,14 +80,14 @@ export function linesToText(lineItems, disableInlineFormats) {
     return text;
 }
 
-function firstFormat(lineItem) {
+function firstFormat(lineItem:LineItem) {
     if (lineItem.words.length == 0) {
         return null;
     }
     return lineItem.words[0].format;
 }
 
-function isPunctationCharacter(string) {
+function isPunctationCharacter(string:string) {
     if (string.length != 1) {
         return false;
     }

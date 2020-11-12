@@ -1,5 +1,6 @@
 // A abstract PageItem class, can be TextItem, LineItem or LineItemBlock
 
+import { Enumify } from "enumify";
 import Annotation from "./Annotation";
 
 
@@ -7,13 +8,13 @@ type PageItemType = {
     name:string
 }
 
-export default class PageItem {
-    type:PageItemType|null
+export default class PageItem<TYPE extends Enumify> {
+    type:TYPE|null
     annotation:Annotation
     parsedElements:any    
 
     constructor( options:{
-        type:PageItemType,
+        type:TYPE,
         annotation:Annotation,
         parsedElements:any        
     }

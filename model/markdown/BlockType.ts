@@ -1,91 +1,116 @@
-import { Enum } from 'enumify';
+import { Enumify } from 'enumify';
 import { linesToText } from './WordType.jsx';
 import LineItemBlock from '../LineItemBlock.jsx';
 
+type ToText = ( block:LineItemBlock ) => string
 // An Markdown block
-export default class BlockType extends Enum {
-}
+export default class BlockType extends Enumify {
 
-//TODO rename to BlockType
+    headline: boolean
+    headlineLevel?: number
+    toText:ToText
+    mergeToBlock:boolean
+    mergeFollowingNonTypedItems:boolean
+    mergeFollowingNonTypedItemsWithSmallDistance:boolean
 
-BlockType.initEnum({
-    H1: {
+    constructor( options: { 
+        headline?:boolean,
+        headlineLevel?:number, 
+        mergeToBlock?:boolean, 
+        mergeFollowingNonTypedItems?:boolean, 
+        mergeFollowingNonTypedItemsWithSmallDistance?:boolean
+        toText:ToText }) 
+    { 
+        super() 
+
+        this.headline = options.headline || false
+        this.headlineLevel = options.headlineLevel
+        this.mergeToBlock = options.mergeToBlock || false
+        this.toText = options.toText
+        this.mergeFollowingNonTypedItems = options.mergeFollowingNonTypedItems || false
+        this.mergeFollowingNonTypedItemsWithSmallDistance = options.mergeFollowingNonTypedItemsWithSmallDistance || false
+    }
+
+    static H1 = new BlockType( {
         headline: true,
         headlineLevel: 1,
         toText(block:LineItemBlock) {
             return '# ' + linesToText(block.items, true);
         }
-    },
-    H2: {
+    })
+    static H2 = new BlockType({
         headline: true,
         headlineLevel: 2,
         toText(block:LineItemBlock) {
             return '## ' + linesToText(block.items, true);
         }
-    },
-    H3: {
+    })
+    static H3 = new BlockType( {
         headline: true,
         headlineLevel: 3,
         toText(block:LineItemBlock) {
             return '### ' + linesToText(block.items, true);
         }
-    },
-    H4: {
+    })
+    static H4 = new BlockType( {
         headline: true,
         headlineLevel: 4,
         toText(block:LineItemBlock) {
             return '#### ' + linesToText(block.items, true);
         }
-    },
-    H5: {
+    })
+    static H5 = new BlockType( {
         headline: true,
         headlineLevel: 5,
         toText(block:LineItemBlock) {
             return '##### ' + linesToText(block.items, true);
         }
-    },
-    H6: {
+    })
+    static H6 = new BlockType( {
         headline: true,
         headlineLevel: 6,
         toText(block:LineItemBlock) {
             return '###### ' + linesToText(block.items, true);
         }
-    },
-    TOC: {
+    })
+    static TOC = new BlockType( {
         mergeToBlock: true,
         toText(block:LineItemBlock) {
             return linesToText(block.items, true);
         }
-    },
-    FOOTNOTES: {
+    })
+    static FOOTNOTES = new BlockType({
         mergeToBlock: true,
         mergeFollowingNonTypedItems: true,
         toText(block:LineItemBlock) {
             return linesToText(block.items, false);
         }
-    },
-    CODE: {
+    })
+
+    static CODE = new BlockType( {
         mergeToBlock: true,
         toText(block:LineItemBlock) {
             return '```\n' + linesToText(block.items, true) + '```'
         }
-    },
-    LIST: {
+    })
+    static LIST = new BlockType( {
         mergeToBlock: true,
         mergeFollowingNonTypedItemsWithSmallDistance: true,
         toText(block:LineItemBlock) {
             return linesToText(block.items, false);
         }
-    },
-    PARAGRAPH: {
+    })
+    static PARAGRAPH = new BlockType( {
         toText(block:LineItemBlock) {
             return linesToText(block.items, false);
         }
-    }
-});
+    })
+    static _ = BlockType.closeEnum()
+}
+
 
 export function isHeadline(type: BlockType) {
-    return type && type.name.length == 2 && type.name[0] === 'H'
+    return type && type.enumKey.length == 2 && type.enumKey[0] === 'H'
 }
 
 export function blockToText(block: LineItemBlock) {
@@ -95,7 +120,7 @@ export function blockToText(block: LineItemBlock) {
     return block.type.toText(block);
 }
 
-export function headlineByLevel(level) {
+export function headlineByLevel(level:number) {
     if (level == 1) {
         return BlockType.H1;
     } else if (level == 2) {
