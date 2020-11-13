@@ -2,7 +2,7 @@ import Transformation from './Transformation';
 import ParseResult from '../ParseResult';
 import LineItem from '../LineItem';
 //import LineItemPageView from '../../components/debug/LineItemPageView.jsx';
-import { REMOVED_ANNOTATION } from '../Annotation.js';
+import { REMOVED_ANNOTATION } from '../Annotation';
 
 // Abstract class for transformations producing LineItem(s) to be shown in the LineItemPageView
 export default class ToLineItemTransformation implements Transformation {

@@ -51,9 +51,12 @@ declare module "pdfjs-dist" {
             Producer: string,
             Creator: string,
             CreationDate: string,
-            ModDate: string 
+            ModDate: string,
+            Author?:string
+            Title?:string
         },
         contentDispositionFilename: null  
+        metadata?:any
     }
 
     interface PDFPageProxy {
@@ -63,7 +66,11 @@ declare module "pdfjs-dist" {
     }
 
     interface PDFDocumentProxy {
-
+        _transport:{
+            commonObjs: {
+                get( key:string, value:( value:any ) => void )
+            }
+        }
         getMetadata():PDFPromise<PDFMetadata>
     }
 

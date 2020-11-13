@@ -7,10 +7,12 @@ type GenericItem = LineItem|string|{
 
 // A page which holds PageItems displayable via PdfPageView
 export default class Page {
+    index:number
+    items:Array<GenericItem>  
 
-    constructor( 
-        public index:number, 
-        public items:Array<GenericItem> = [])  
-        {}
+    constructor( options:{index:number, items?:Array<GenericItem>} ) {
+        this.index = options.index
+        this.items = options.items || []
+    }
 
 }

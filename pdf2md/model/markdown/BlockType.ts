@@ -1,5 +1,5 @@
 import { Enumify } from 'enumify';
-import { linesToText } from './WordType.js';
+import { linesToText } from './WordType';
 import LineItemBlock from '../LineItemBlock';
 
 type ToText = ( block:LineItemBlock ) => string
@@ -22,7 +22,6 @@ export default class BlockType extends Enumify {
         toText:ToText }) 
     { 
         super() 
-
         this.headline = options.headline || false
         this.headlineLevel = options.headlineLevel
         this.mergeToBlock = options.mergeToBlock || false

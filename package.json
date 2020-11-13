@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "pdf2md:build": "parcel build pdf2md.ts --target node --out-dir bin",
-    "pdf2md:start": "node --inspect bin/pdf2md.js",
+    "pdf2md:build": "parcel build pdf2md/pdf2md.ts --no-minify --target node --out-dir bin",
+    "pdf2md:start": "node bin/pdf2md.js",
     "build": "parcel build index.ts --target node --out-dir bin",
     "start": "node bin/index.js"
   },

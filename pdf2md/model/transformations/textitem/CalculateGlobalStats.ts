@@ -3,9 +3,9 @@ import ParseResult from '../../ParseResult';
 import WordFormat from '../../markdown/WordFormat';
 
 export default class CalculateGlobalStats extends ToTextItemTransformation {
-    fontMap:any
+    fontMap:Map<string,FONT>
 
-    constructor(fontMap:any) {
+    constructor(fontMap:Map<string,FONT>) {
         super("Calculate Statistics");
         this.fontMap = fontMap;
     }
