@@ -1,12 +1,15 @@
-import ToLineItemTransformation from '../ToLineItemTransformation.jsx';
-import ParseResult from '../../ParseResult.js';
-import LineItem from '../../LineItem.jsx';
-import Word from '../../Word.jsx';
-import HeadlineFinder from '../../HeadlineFinder.jsx';
-import { REMOVED_ANNOTATION, ADDED_ANNOTATION } from '../../Annotation.jsx';
-import BlockType from '../../markdown/BlockType.jsx';
-import { headlineByLevel } from '../../markdown/BlockType.jsx';
-import { isDigit, isNumber, wordMatch, hasOnly } from '../../../stringFunctions.jsx'
+import ToLineItemTransformation from '../ToLineItemTransformation';
+import ParseResult from '../../ParseResult';
+import LineItem from '../../LineItem';
+import { Word, wordOf } from '../../Word';
+import HeadlineFinder from '../../HeadlineFinder';
+import { REMOVED_ANNOTATION, ADDED_ANNOTATION } from '../../Annotation';
+import BlockType from '../../markdown/BlockType';
+import { headlineByLevel } from '../../markdown/BlockType';
+import { isDigit, isNumber, wordMatch, hasOnly } from '../../stringFunctions'
+import Page from '../../Page';
+import TextItem from '../../TextItem';
+import {FONT} from '../../TextItem';
 
 //Detect table of contents pages plus linked headlines
 export default class DetectTOC extends ToLineItemTransformation {
@@ -16,27 +19,31 @@ export default class DetectTOC extends ToLineItemTransformation {
     }
 
     transform(parseResult:ParseResult) {
-        const tocPages = [];
+        const tocPages = Array<number>();
         const maxPagesToEvaluate = Math.min(20, parseResult.pages.length);
-        const linkLeveler = new LinkLeveler();
+        const linkLeveler = new LinkLeveler()
 
 
-        var tocLinks = [];
-        var lastTocPage;
-        var headlineItem;
+        let tocLinks = Array<TocLink>()
+        let lastTocPage:Page|null = null
+        let headlineItem:LineItem|null;
+
         parseResult.pages.slice(0, maxPagesToEvaluate).forEach(page => {
             var lineItemsWithDigits = 0;
             const unknownLines = new Set();
-            const pageTocLinks = [];
-            var lastWordsWithoutNumber;
-            var lastLine;
+            const pageTocLinks = Array<TocLink>()
+            let lastWordsWithoutNumber:Array<Word>|null;
+            let lastLine:LineItem;
             //find lines ending with a number per page
-            page.items.forEach(line => {
-                var words = line.words.filter(word => !hasOnly(word.string, '.'));
-                const digits = [];
+            page.items.forEach((line:LineItem) => {
+                
+                const words = line.words.filter(word => !hasOnly(word.string, '.'))
+                const digits = Array<string>()
+
                 while (words.length > 0 && isNumber(words[words.length - 1].string)) {
                     const lastWord = words.pop();
-                    digits.unshift(lastWord.string);
+                    if( lastWord )
+                        digits.unshift(lastWord.string);
                 }
 
                 if (digits.length == 0 && words.length > 0) {
@@ -46,7 +53,9 @@ export default class DetectTOC extends ToLineItemTransformation {
                         lastWord.string = lastWord.string.substring(0, lastWord.string.length - 1);
                     }
                 }
-                var endsWithDigit = digits.length > 0;
+
+                let endsWithDigit = digits.length > 0;
+                
                 if (endsWithDigit) {
                     endsWithDigit = true;
                     if (lastWordsWithoutNumber) { // 2-line item ?
@@ -81,7 +90,7 @@ export default class DetectTOC extends ToLineItemTransformation {
                 linkLeveler.levelPageItems(pageTocLinks);
                 tocLinks.push(...pageTocLinks);
 
-                const newBlocks = [];
+                const newBlocks = Array<LineItem>();
                 page.items.forEach((line) => {
                     if (!unknownLines.has(line)) {
                         line.annotation = REMOVED_ANNOTATION;
@@ -103,15 +112,17 @@ export default class DetectTOC extends ToLineItemTransformation {
 
         //all  pages have been processed
         var foundHeadlines = tocLinks.length;
-        const notFoundHeadlines = [];
-        const foundBySize = [];
-        const headlineTypeToHeightRange = {}; //H1={min:23, max:25}
+        const notFoundHeadlines = Array<any>()
+        const foundBySize = Array<any>()
+        const headlineTypeToHeightRange:{ [name:string]:any } = {}; //H1={min:23, max:25}
 
         if (tocPages.length > 0) {
             // Add TOC items
+            
             tocLinks.forEach(tocLink => {
-                lastTocPage.items.push(new LineItem({
-                    words: [new Word({
+                lastTocPage?.items.push(new LineItem({
+                    words: [ wordOf({
+                        type:null,
                         string: ' '.repeat(tocLink.level * 3) + '-'
                     })].concat(tocLink.lineItem.words),
                     type: BlockType.TOC,
@@ -120,14 +131,17 @@ export default class DetectTOC extends ToLineItemTransformation {
             });
 
             // Add linked headers
-            const pageMapping = detectPageMappingNumber(parseResult.pages.filter(page => page.index > lastTocPage.index), tocLinks);
+           
+            const pageMapping = detectPageMappingNumber(
+                                    parseResult.pages.filter(page => page.index > lastTocPage!.index), tocLinks);
+            
             tocLinks.forEach(tocLink => {
-                var linkedPage = parseResult.pages[tocLink.pageNumber + pageMapping];
+                let linkedPage = parseResult.pages[tocLink.pageNumber + (pageMapping||0) ];
                 var foundHealineItems;
                 if (linkedPage) {
                     foundHealineItems = findHeadlineItems(linkedPage, tocLink.lineItem.text());
                     if (!foundHealineItems) { // pages are off by 1 ?
-                        linkedPage = parseResult.pages[tocLink.pageNumber + pageMapping + 1];
+                        linkedPage = parseResult.pages[tocLink.pageNumber + (pageMapping||0) + 1];
                         if (linkedPage) {
                             foundHealineItems = findHeadlineItems(linkedPage, tocLink.lineItem.text());
                         }
@@ -141,13 +155,16 @@ export default class DetectTOC extends ToLineItemTransformation {
             });
 
             // Try to find linked headers by height
-            var fromPage = lastTocPage.index + 2;
-            var lastNotFound = [];
-            const rollupLastNotFound = (currentPageNumber) => {
+
+            let fromPage = lastTocPage!.index + 2;
+            
+            let lastNotFound = Array<TocLink>()
+
+            const rollupLastNotFound = (currentPageNumber:number) => {
                 if (lastNotFound.length > 0) {
                     lastNotFound.forEach(notFoundTocLink => {
                         const headlineType = headlineByLevel(notFoundTocLink.level + 2);
-                        const heightRange = headlineTypeToHeightRange[headlineType.name];
+                        const heightRange = headlineTypeToHeightRange[headlineType.enumKey];
                         if (heightRange) {
                             const [pageIndex, lineIndex] = findPageAndLineFromHeadline(parseResult.pages, notFoundTocLink, heightRange, fromPage, currentPageNumber);
                             if (lineIndex > -1) {
@@ -162,7 +179,7 @@ export default class DetectTOC extends ToLineItemTransformation {
                             }
                         }
                     });
-                    lastNotFound = [];
+                    lastNotFound = Array<TocLink>();
                 }
             }
             if (notFoundHeadlines.length > 0) {
@@ -192,7 +209,7 @@ export default class DetectTOC extends ToLineItemTransformation {
             messages.push('Found TOC headlines (by size): ' + foundBySize.map(tocLink => tocLink.lineItem.text()));
             messages.push('Missing TOC headlines: ' + notFoundHeadlines.filter(fTocLink => !foundBySize.includes(fTocLink)).map(tocLink => tocLink.lineItem.text() + '=>' + tocLink.pageNumber));
         }
-        return new ParseResult({
+        return {
             ...parseResult,
             globals: {
                 ...parseResult.globals,
@@ -200,13 +217,13 @@ export default class DetectTOC extends ToLineItemTransformation {
                 headlineTypeToHeightRange: headlineTypeToHeightRange
             },
             messages: messages
-        });
+        }
     }
 
 }
 
 //Find out how the TOC page link actualy translates to the page.index
-function detectPageMappingNumber(pages, tocLinks) {
+function detectPageMappingNumber(pages:Array<Page>, tocLinks:Array<TocLink>) {
     for ( var tocLink of tocLinks ) {
         const page = findPageWithHeadline(pages, tocLink.lineItem.text());
         if (page) {
@@ -216,7 +233,7 @@ function detectPageMappingNumber(pages, tocLinks) {
     return null;
 }
 
-function findPageWithHeadline(pages, headline) {
+function findPageWithHeadline(pages:Array<Page>, headline:any) {
     for ( var page of pages ) {
         if (findHeadlineItems(page, headline)) {
             return page;
@@ -225,10 +242,8 @@ function findPageWithHeadline(pages, headline) {
     return null;
 }
 
-function findHeadlineItems(page, headline) {
-    const headlineFinder = new HeadlineFinder({
-        headline: headline
-    });
+function findHeadlineItems(page:Page, headline:any) {
+    const headlineFinder = new HeadlineFinder({ headline: headline });
     var lineIndex = 0;
     for ( var line of page.items ) {
         const headlineItems = headlineFinder.consume(line);
@@ -243,10 +258,13 @@ function findHeadlineItems(page, headline) {
     return null;
 }
 
-function addHeadlineItems(page, tocLink, foundItems, headlineTypeToHeightRange) {
-    foundItems.headlineItems.forEach(item => item.annotation = REMOVED_ANNOTATION);
+function addHeadlineItems(page:Page, tocLink:TocLink, foundItems:any, headlineTypeToHeightRange:any) {
+
+    foundItems.headlineItems.forEach( (item:any) => item.annotation = REMOVED_ANNOTATION);
+    
     const headlineType = headlineByLevel(tocLink.level + 2);
-    const headlineHeight = foundItems.headlineItems.reduce((max, item) => Math.max(max, item.height), 0);
+    const headlineHeight = foundItems.headlineItems.reduce( (max:number, item:any) => Math.max(max, item.height), 0);
+
     page.items.splice(foundItems.lineIndex + 1, 0, new LineItem({
         ...foundItems.headlineItems[0],
         words: tocLink.lineItem.words,
@@ -254,7 +272,8 @@ function addHeadlineItems(page, tocLink, foundItems, headlineTypeToHeightRange) 
         type: headlineType,
         annotation: ADDED_ANNOTATION
     }));
-    var range = headlineTypeToHeightRange[headlineType.name];
+    
+    let range = headlineTypeToHeightRange[headlineType.enumKey];
     if (range) {
         range.min = Math.min(range.min, headlineHeight);
         range.max = Math.max(range.max, headlineHeight);
@@ -263,11 +282,16 @@ function addHeadlineItems(page, tocLink, foundItems, headlineTypeToHeightRange) 
             min: headlineHeight,
             max: headlineHeight
         };
-        headlineTypeToHeightRange[headlineType.name] = range;
+        headlineTypeToHeightRange[headlineType.enumKey] = range;
     }
 }
 
-function findPageAndLineFromHeadline(pages, tocLink, heightRange, fromPage, toPage) {
+type Range = {
+    min:number,
+    max:number
+}
+
+function findPageAndLineFromHeadline(pages:Array<Page>, tocLink:TocLink, heightRange:Range, fromPage:number, toPage:number) {
     const linkText = tocLink.lineItem.text().toUpperCase();
     for (var i = fromPage; i <= toPage; i++) {
         const page = pages[i - 1];
@@ -284,9 +308,10 @@ function findPageAndLineFromHeadline(pages, tocLink, heightRange, fromPage, toPa
 }
 
 class LinkLeveler {
+    levelByMethod:(( tocLinks:Array<TocLink>) => void)|null = null;
+    uniqueFonts = Array<FONT>()
+    
     constructor() {
-        this.levelByMethod = null;
-        this.uniqueFonts = [];
     }
 
     levelPageItems(tocLinks:TocLink[]) {
@@ -307,30 +332,30 @@ class LinkLeveler {
         this.levelByMethod(tocLinks);
     }
 
-    levelByXDiff(tocLinks) {
+    levelByXDiff(tocLinks:Array<TocLink>) {
         const uniqueX = this.calculateUniqueX(tocLinks);
         tocLinks.forEach(link => {
             link.level = uniqueX.indexOf(link.lineItem.x);
         });
     }
 
-    levelByFont(tocLinks) {
+    levelByFont(tocLinks:Array<TocLink>) {
         tocLinks.forEach(link => {
             link.level = this.uniqueFonts.indexOf(link.lineItem.font);
         });
     }
 
-    levelToZero(tocLinks) {
+    levelToZero(tocLinks:Array<TocLink>) {
         tocLinks.forEach(link => {
             link.level = 0;
         });
     }
 
-    calculateUniqueX(tocLinks) {
+    calculateUniqueX(tocLinks:Array<TocLink>) {
         var uniqueX = tocLinks.reduce(function(uniquesArray, link) {
             if (uniquesArray.indexOf(link.lineItem.x) < 0) uniquesArray.push(link.lineItem.x);
             return uniquesArray;
-        }, []);
+        }, Array<number>());
 
         uniqueX.sort((a, b) => {
             return a - b
@@ -339,21 +364,27 @@ class LinkLeveler {
         return uniqueX;
     }
 
-    calculateUniqueFonts(tocLinks) {
-        var uniqueFont = tocLinks.reduce(function(uniquesArray, link) {
+    calculateUniqueFonts(tocLinks:Array<TocLink>) {
+        return tocLinks.reduce((uniquesArray, link) => {
             if (uniquesArray.indexOf(link.lineItem.font) < 0) uniquesArray.push(link.lineItem.font);
             return uniquesArray;
-        }, []);
-
-        return uniqueFont;
+        }, Array<any>() )
     }
 
 }
 
+type ITEM = any
+/**
+ * 
+ */
 class TocLink {
-    constructor(options) {
+
+    lineItem:ITEM
+    pageNumber:number
+    level = 0;
+
+    constructor(options: { lineItem:ITEM, pageNumber:number } ) {
         this.lineItem = options.lineItem;
         this.pageNumber = options.pageNumber;
-        this.level = 0;
     }
 }

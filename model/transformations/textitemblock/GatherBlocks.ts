@@ -31,7 +31,7 @@ export default class GatherBlocks extends ToLineItemBlockTransformation {
 
             let minX = minXFromPageItems(page.items);
             page.items.forEach(item => {
-                if (stashedBlock.items.length > 0 && shouldFlushBlock(stashedBlock, item, minX, mostUsedDistance)) {
+                if (stashedBlock.items.length > 0 && shouldFlushBlock(stashedBlock, item, minX||0, mostUsedDistance)) {
                     flushStashedItems();
                 }
                 stashedBlock.addItem(item);

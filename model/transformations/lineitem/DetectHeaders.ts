@@ -4,6 +4,7 @@ import { DETECTED_ANNOTATION } from '../../Annotation';
 import BlockType from '../../markdown/BlockType';
 import { headlineByLevel } from '../../markdown/BlockType';
 import { isListItem } from '../../stringFunctions';
+import Page from '../../Page';
 
 //Detect headlines based on heights
 export default class DetectHeaders extends ToLineItemTransformation {
@@ -53,8 +54,8 @@ export default class DetectHeaders extends ToLineItemTransformation {
 
             });
         } else { //Categorize headlines by the text heights
-            const heights = [];
-            var lastHeight;
+            const heights = Array<number>();
+            var lastHeight:number;
             parseResult.pages.forEach(page => {
                 page.items.forEach(item => {
                     if (!item.type && item.height > mostUsedHeight && !isListItem(item.text())) {
@@ -95,7 +96,7 @@ export default class DetectHeaders extends ToLineItemTransformation {
         if (smallesHeadlineLevel < 6) {
             const nextHeadlineType = headlineByLevel(smallesHeadlineLevel + 1);
             parseResult.pages.forEach(page => {
-                var lastItem;
+                let lastItem:any;
                 page.items.forEach(item => {
                     if (!item.type
                             && item.height == mostUsedHeight
@@ -113,19 +114,19 @@ export default class DetectHeaders extends ToLineItemTransformation {
         }
 
 
-        return new ParseResult({
+        return {
             ...parseResult,
             messages: [
                 'Detected ' + detectedHeaders + ' headlines.',
             ]
-        });
+        }
 
     }
 
 }
 
-function findPagesWithMaxHeight(pages, maxHeight) {
-    const maxHeaderPagesSet = new Set();
+function findPagesWithMaxHeight(pages:Array<Page>, maxHeight:number) {
+    const maxHeaderPagesSet = new Set<Page>();
     pages.forEach(page => {
         page.items.forEach(item => {
             if (!item.type && item.height == maxHeight) {

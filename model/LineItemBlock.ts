@@ -18,7 +18,7 @@ export default class LineItemBlock extends PageItem<BlockType> {
             throw `Adding item of type ${item.type} to block of type ${this.type}`
         }
         if (!this.type) {
-            this.type = item.type;
+            this.type = <any>item.type;
         }
         if (item.parsedElements) {
             if (this.parsedElements) {

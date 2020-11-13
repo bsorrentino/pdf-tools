@@ -1,8 +1,9 @@
-import ToLineItemTransformation from '../ToLineItemTransformation.jsx';
-import ParseResult from '../../ParseResult.js';
-import LineItem from '../../LineItem.jsx';
-import StashingStream from '../../StashingStream.jsx';
-import { REMOVED_ANNOTATION, ADDED_ANNOTATION } from '../../Annotation.jsx';
+import ToLineItemTransformation from '../ToLineItemTransformation';
+import ParseResult from '../../ParseResult';
+import LineItem from '../../LineItem';
+import StashingStream from '../../StashingStream';
+import { REMOVED_ANNOTATION, ADDED_ANNOTATION } from '../../Annotation';
+import { Word } from '../../Word';
 
 // Converts vertical text to horizontal
 export default class VerticalToHorizontal extends ToLineItemTransformation {
@@ -20,32 +21,30 @@ export default class VerticalToHorizontal extends ToLineItemTransformation {
             foundVerticals += stream.foundVerticals;
         });
 
-        return new ParseResult({
+        return {
             ...parseResult,
             messages: ["Converted " + foundVerticals + " verticals"]
-        });
+        }
     }
 
 }
 
 class VerticalsStream extends StashingStream {
+    foundVerticals = 0;
 
-    constructor() {
-        super();
-        this.foundVerticals = 0;
-    }
+    constructor() { super(); }
 
-    shouldStash(item) {
+    shouldStash(item:LineItem) {
         return item.words.length == 1 && item.words[0].string.length == 1;
     }
 
-    doMatchesStash(lastItem, item) {
+    doMatchesStash(lastItem:LineItem, item:LineItem) {
         return lastItem.y - item.y > 5 && lastItem.words[0].type === item.words[0].type;
     }
 
-    doFlushStash(stash, results) {
+    doFlushStash(stash:Array<LineItem>, results:Array<LineItem>) {
         if (stash.length > 5) { // unite
-            var combinedWords = [];
+            var combinedWords = Array<Word>()
             var minX = 999;
             var maxY = 0;
             var sumWidth = 0;

@@ -1,5 +1,5 @@
 import TextItem from './TextItem';
-import Word from './Word';
+import { Word, wordOf } from './Word';
 import WordType from './markdown/WordType';
 import WordFormat from './markdown/WordFormat';
 import LineItem from './LineItem';
@@ -95,9 +95,9 @@ class WordDetectionStream extends StashingStream {
         if (this.stashedNumber) {
             const joinedNumber = stash.map(item => item.text).join('').trim();
             if (stash[0].y > this.firstY) { // footnote link
-                results.push({
+                results.push( {
                     string: `${joinedNumber}`,
-                    type: WordType.FOOTNOTE_LINK
+                    type: WordType.FOOTNOTE_LINK,
                 });
                 this.footnoteLinks.push(parseInt(joinedNumber));
             } else if (this.currentItem && this.currentItem.y < stash[0].y) { // footnote
@@ -122,9 +122,11 @@ class WordDetectionStream extends StashingStream {
     itemsToWords(items:Array<any>, formatName:string):Array<Word> {
         const combinedText = combineText(items);
         const words = combinedText.split(' ');
-        const format = formatName ? WordFormat.enumValueOf(formatName) : null;
+        const format:WordFormat|null = formatName ? <WordFormat>WordFormat.enumValueOf(formatName) : null;
+
         return words.filter(w => w.trim().length > 0).map(word => {
-            var type = null;
+            let type:WordType|null = null;
+
             if (word.startsWith('http:')) {
                 this.containLinks = true;
                 type = WordType.LINK;
@@ -137,11 +139,11 @@ class WordDetectionStream extends StashingStream {
             if (format) {
                 this.formattedWords++;
             }
-            return {
+            return wordOf({
                 string: word,
                 type: type,
                 format: format
-            };
+            });
         });
     }
 }

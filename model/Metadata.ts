@@ -1,7 +1,12 @@
 // Metadata of the PDF document
-export default class Metadata {
 
-    constructor(originalMetadata) {
+export default class Metadata {
+    author?:string
+    title:string
+    creator:string
+    producer:string
+
+    constructor(originalMetadata:any) {
         if (originalMetadata.metadata) {
             this.title = originalMetadata.metadata.get('dc:title');
             this.creator = originalMetadata.metadata.get('xap:creatortool')

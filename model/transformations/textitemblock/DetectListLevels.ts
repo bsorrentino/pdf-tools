@@ -1,8 +1,9 @@
-import ToLineItemBlockTransformation from '../ToLineItemBlockTransformation.jsx';
-import ParseResult from '../../ParseResult.js';
-import Word from '../../Word.jsx';
-import { MODIFIED_ANNOTATION, UNCHANGED_ANNOTATION } from '../../Annotation.jsx';
-import BlockType from '../../markdown/BlockType.jsx';
+import ToLineItemBlockTransformation from '../ToLineItemBlockTransformation';
+import ParseResult from '../../ParseResult';
+import { wordOf } from '../../Word';
+import { MODIFIED_ANNOTATION, UNCHANGED_ANNOTATION } from '../../Annotation';
+import BlockType from '../../markdown/BlockType';
+import LineItemBlock from '../../LineItemBlock';
 
 // Cares for proper sub-item spacing/leveling
 export default class DetectListLevels extends ToLineItemBlockTransformation {
@@ -17,10 +18,10 @@ export default class DetectListLevels extends ToLineItemBlockTransformation {
         var modifiedBlocks = 0;
         parseResult.pages.forEach(page => {
 
-            page.items.filter(block => block.type === BlockType.LIST).forEach(listBlock => {
-                var lastItemX;
+            page.items.filter(block => block.type === BlockType.LIST).forEach( (listBlock:LineItemBlock) => {
+                let lastItemX:number;
                 var currentLevel = 0;
-                const xByLevel = {};
+                const xByLevel = Array<number>();
                 var modifiedBlock = false;
                 listBlock.items.forEach(item => {
                     const isListItem = true;
@@ -35,7 +36,7 @@ export default class DetectListLevels extends ToLineItemBlockTransformation {
                         xByLevel[item.x] = 0;
                     }
                     if (currentLevel > 0) {
-                        item.words = [new Word({
+                        item.words = [wordOf({
                             string: ' '.repeat(currentLevel * 3)
                         })].concat(item.words);
                         modifiedBlock = true;
@@ -52,10 +53,10 @@ export default class DetectListLevels extends ToLineItemBlockTransformation {
             });
 
         });
-        return new ParseResult({
+        return {
             ...parseResult,
             messages: ['Modified ' + modifiedBlocks + ' / ' + listBlocks + ' list blocks.']
-        });
+        }
 
     }
 }

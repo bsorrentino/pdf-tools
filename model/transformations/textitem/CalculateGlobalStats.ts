@@ -12,8 +12,8 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
 
     transform(parseResult:ParseResult) {
         // Parse heights
-        const heightToOccurrence:any = {};
-        const fontToOccurrence:any = {};
+        const heightToOccurrence:{ [key:string]:any } = {};
+        const fontToOccurrence:{ [key:string]:any } = {};
         let maxHeight = 0;
         let maxHeightFont:number|undefined;
         parseResult.pages.forEach(page => {
@@ -30,9 +30,9 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
         const mostUsedFont = getMostUsedKey(fontToOccurrence);
 
         // Parse line distances
-        const distanceToOccurrence = {};
+        const distanceToOccurrence = Array<number>();
         parseResult.pages.forEach(page => {
-            var lastItemOfMostUsedHeight;
+            let lastItemOfMostUsedHeight:any
             page.items.forEach(item => {
                 if (item.height == mostUsedHeight && item.text.trim().length > 0) {
                     if (lastItemOfMostUsedHeight && item.y != lastItemOfMostUsedHeight.y) {
@@ -50,12 +50,12 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
         const mostUsedDistance = parseInt(getMostUsedKey(distanceToOccurrence));
 
 
-        const fontIdToName = [];
+        const fontIdToName = Array<any>();
         const fontToFormats = new Map();
-        this.fontMap.forEach(function(value, key) {
+        this.fontMap.forEach( (value:any, key:any) => {
             fontIdToName.push(key + " = " + value.name)
             const fontName = value.name.toLowerCase();
-            var format;
+            let format:any;
             if (key == mostUsedFont) {
                 format = null;
             } else if (fontName.includes('bold') && (fontName.includes('oblique') || fontName.includes('italic'))) {
@@ -86,7 +86,7 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
                 })
             };
         });
-        return new ParseResult({
+        return {
             ...parseResult,
             pages: newPages,
             globals: {
@@ -103,15 +103,15 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
                 'Items per distance: ' + JSON.stringify(distanceToOccurrence),
                 'Fonts:' + JSON.stringify(fontIdToName)
             ]
-        });
+        }
     }
 
 
 }
 
-function getMostUsedKey(keyToOccurrence) {
-    var maxOccurence = 0;
-    var maxKey;
+function getMostUsedKey(keyToOccurrence:any) {
+    let maxOccurence = 0;
+    let maxKey:any;
     Object.keys(keyToOccurrence).map((element) => {
         if (!maxKey || keyToOccurrence[element] > maxOccurence) {
             maxOccurence = keyToOccurrence[element];

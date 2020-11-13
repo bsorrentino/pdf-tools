@@ -4,10 +4,6 @@ import { Enumify } from "enumify";
 import Annotation from "./Annotation";
 
 
-type PageItemType = {
-    name:string
-}
-
 export default class PageItem<TYPE extends Enumify> {
     type:TYPE|null
     annotation:Annotation

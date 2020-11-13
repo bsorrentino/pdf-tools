@@ -1,16 +1,16 @@
-import PageItem from "./PageItem";
+import LineItem from "./LineItem";
 
-export type PageItems = Array<PageItem|string|{
+type GenericItem = LineItem|string|{
     category: string,
     text: string
-}|any>
+}|any
 
 // A page which holds PageItems displayable via PdfPageView
 export default class Page {
 
     constructor( 
         public index:number, 
-        public items:PageItems = [])  
+        public items:Array<GenericItem> = [])  
         {}
 
 }

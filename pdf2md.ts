@@ -64,7 +64,7 @@ async function main(pdfPath:string) {
 
         const fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
         const dividedHeight = item.height / fontHeight;
-        return TextItem.of({
+        return new TextItem({
             x: Math.round(item.transform[4]),
             y: Math.round(item.transform[5]),
             width: Math.round(item.width),

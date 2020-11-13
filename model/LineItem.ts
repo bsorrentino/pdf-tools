@@ -1,8 +1,9 @@
+import BlockType from './markdown/BlockType'
 import PageItem from './PageItem'
-import Word from './Word'
+import { Word } from './Word'
 
 //A line within a page
-export default class LineItem extends PageItem {
+export default class LineItem extends PageItem<BlockType> {
 
     x:number
     y:number

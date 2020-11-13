@@ -1,14 +1,14 @@
-import ToLineItemTransformation from '../ToLineItemTransformation.jsx';
-import ParseResult from '../../ParseResult.js';
-import LineItem from '../../LineItem.jsx';
-import Word from '../../Word.jsx';
-import { REMOVED_ANNOTATION, ADDED_ANNOTATION, DETECTED_ANNOTATION } from '../../Annotation.jsx';
-import BlockType from '../../markdown/BlockType.jsx';
-import { isListItemCharacter, isNumberedListItem } from '../../../stringFunctions.jsx';
+import ToLineItemTransformation from '../ToLineItemTransformation';
+import ParseResult from '../../ParseResult';
+import LineItem from '../../LineItem';
+import { REMOVED_ANNOTATION, ADDED_ANNOTATION, DETECTED_ANNOTATION } from '../../Annotation';
+import BlockType from '../../markdown/BlockType';
+import { isListItemCharacter, isNumberedListItem } from '../../stringFunctions';
+import { wordOf } from '../../Word';
 
 //Detect items starting with -, •, etc...
 export default class DetectListItems extends ToLineItemTransformation {
-
+  
     constructor() {
         super("Detect List Items");
     }
@@ -17,11 +17,17 @@ export default class DetectListItems extends ToLineItemTransformation {
         var foundListItems = 0;
         var foundNumberedItems = 0;
         parseResult.pages.forEach(page => {
-            const newItems = [];
-            page.items.forEach(item => {
-                newItems.push(item);
-                if (!item.type) {
-                    var text = item.text();
+            
+            const newItems:Array<any> = [];
+
+            page.items.forEach( (_item:any) => {
+
+                newItems.push(_item);
+
+                if (!_item.type) {
+                    const item = _item as LineItem
+
+                    const text = item.text();
                     if (isListItemCharacter(item.words[0].string)) {
                         foundListItems++
                         if (item.words[0].string === '-') {
@@ -29,9 +35,7 @@ export default class DetectListItems extends ToLineItemTransformation {
                             item.type = BlockType.LIST;
                         } else {
                             item.annotation = REMOVED_ANNOTATION;
-                            const newWords = item.words.map(word => new Word({
-                                ...word
-                            }));
+                            const newWords = item.words.map(word => wordOf(word) );
                             newWords[0].string = '-';
                             newItems.push(new LineItem({
                                 ...item,
@@ -50,13 +54,13 @@ export default class DetectListItems extends ToLineItemTransformation {
             page.items = newItems;
         });
 
-        return new ParseResult({
+        return {
             ...parseResult,
             messages: [
                 'Detected ' + foundListItems + ' plain list items.',
                 'Detected ' + foundNumberedItems + ' numbered list items.'
             ]
-        });
+        }
 
     }
 

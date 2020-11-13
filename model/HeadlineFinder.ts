@@ -1,14 +1,18 @@
-import { normalizedCharCodeArray } from '../stringFunctions.jsx'
+import { normalizedCharCodeArray } from './stringFunctions'
+import LineItem from './LineItem';
 
 export default class HeadlineFinder {
+    headlineCharCodes:any
+    stackedLineItems:Array<LineItem> = [];
+    stackedChars = 0;
 
-    constructor(options) {
+    constructor( options: { headline:any } ) {
         this.headlineCharCodes = normalizedCharCodeArray(options.headline);
         this.stackedLineItems = [];
         this.stackedChars = 0;
     }
 
-    consume(lineItem) {
+    consume(lineItem:LineItem) {
         //TODO avoid join
         const normalizedCharCodes = normalizedCharCodeArray(lineItem.text());
         const matchAll = this.matchAll(normalizedCharCodes);
@@ -28,7 +32,7 @@ export default class HeadlineFinder {
         return null;
     }
 
-    matchAll(normalizedCharCodes) {
+    matchAll(normalizedCharCodes:number[]) {
         for (var i = 0; i < normalizedCharCodes.length; i++) {
             const headlineChar = this.headlineCharCodes[this.stackedChars + i];
             const textItemChar = normalizedCharCodes[i];

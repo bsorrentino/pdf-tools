@@ -1,11 +1,9 @@
 import ToLineItemTransformation from '../ToLineItemTransformation';
 import ParseResult from '../../ParseResult';
 import { REMOVED_ANNOTATION } from '../../Annotation';
+import { isDigit } from '../../stringFunctions'
 
-import { isDigit } from '../../../stringFunctions'
-
-
-function hashCodeIgnoringSpacesAndNumbers(string) {
+function hashCodeIgnoringSpacesAndNumbers(string:string) {
     var hash = 0;
     if (string.trim().length === 0) return hash;
     for (var i = 0; i < string.length; i++) {
@@ -17,7 +15,6 @@ function hashCodeIgnoringSpacesAndNumbers(string) {
     }
     return hash;
 }
-
 
 // Remove elements with similar content on same page positions, like page numbers, licenes information, etc...
 export default class RemoveRepetitiveElements extends ToLineItemTransformation {
@@ -33,9 +30,10 @@ export default class RemoveRepetitiveElements extends ToLineItemTransformation {
     transform(parseResult:ParseResult) {
 
         // find first and last lines per page
-        const pageStore = [];
-        const minLineHashRepetitions = {};
-        const maxLineHashRepetitions = {};
+        const pageStore = Array<any>()
+        const minLineHashRepetitions = Array<number>()
+        const maxLineHashRepetitions = Array<number>()
+
         parseResult.pages.forEach(page => {
             const minMaxItems = page.items.reduce((itemStore, item) => {
                 if (item.y < itemStore.minY) {
@@ -58,8 +56,8 @@ export default class RemoveRepetitiveElements extends ToLineItemTransformation {
                 maxElements: []
             });
 
-            const minLineHash = hashCodeIgnoringSpacesAndNumbers(minMaxItems.minElements.reduce((combinedString, item) => combinedString + item.text().toUpperCase(), ''));
-            const maxLineHash = hashCodeIgnoringSpacesAndNumbers(minMaxItems.maxElements.reduce((combinedString, item) => combinedString + item.text().toUpperCase(), ''));
+            const minLineHash = hashCodeIgnoringSpacesAndNumbers(minMaxItems.minElements.reduce((combinedString:string, item:any) => combinedString + item.text().toUpperCase(), ''));
+            const maxLineHash = hashCodeIgnoringSpacesAndNumbers(minMaxItems.maxElements.reduce((combinedString:string, item:any) => combinedString + item.text().toUpperCase(), ''));
             pageStore.push({
                 minElements: minMaxItems.minElements,
                 maxElements: minMaxItems.maxElements,
@@ -73,28 +71,27 @@ export default class RemoveRepetitiveElements extends ToLineItemTransformation {
         // now annoate all removed items
         var removedHeader = 0;
         var removedFooter = 0;
+
         parseResult.pages.forEach((page, i) => {
+
             if (minLineHashRepetitions[pageStore[i].minLineHash] >= Math.max(3, parseResult.pages.length * 2 / 3)) {
-                pageStore[i].minElements.forEach(item => {
-                    item.annotation = REMOVED_ANNOTATION;
-                });
+                pageStore[i].minElements.forEach( (item:any) => item.annotation = REMOVED_ANNOTATION )
                 removedFooter++;
             }
+            
             if (maxLineHashRepetitions[pageStore[i].maxLineHash] >= Math.max(3, parseResult.pages.length * 2 / 3)) {
-                pageStore[i].maxElements.forEach(item => {
-                    item.annotation = REMOVED_ANNOTATION;
-                });
+                pageStore[i].maxElements.forEach( (item:any) => item.annotation = REMOVED_ANNOTATION )
                 removedHeader++;
             }
         });
 
-        return new ParseResult({
+        return {
             ...parseResult,
             messages: [
                 'Removed Header: ' + removedHeader,
                 'Removed Footers: ' + removedFooter
             ]
-        });
+        }
     }
 
 }

@@ -1,7 +1,7 @@
 
 import ToLineItemTransformation from '../ToLineItemTransformation';
-import ParseResult from '../../ParseResult.js';
-import LineItem from '../../LineItem.jsx';
+import ParseResult from '../../ParseResult';
+import LineItem from '../../LineItem';
 import TextItemLineGrouper from '../../TextItemLineGrouper';
 import LineConverter from '../../LineConverter';
 import BlockType from '../../markdown/BlockType';
@@ -54,13 +54,13 @@ export default class CompactLines extends ToLineItemTransformation {
                         linkCount++;
                     }
                     if (lineItem.parsedElements.footnoteLinks.length > 0) {
-                        const footnoteLinks = lineItem.parsedElements.footnoteLinks.map(() => <span key={ footnoteLink }><a href={ "#Page " + (page.index + 1) }>{ footnoteLink }</a>,</span>);
-                        foundFootnoteLinks.push.apply(foundFootnoteLinks, footnoteLinks);
+                        // const footnoteLinks = lineItem.parsedElements.footnoteLinks.map(() => <span key={ footnoteLink }><a href={ "#Page " + (page.index + 1) }>{ footnoteLink }</a>,</span>);
+                        // foundFootnoteLinks.push.apply(foundFootnoteLinks, footnoteLinks);
                     }
                     if (lineItem.parsedElements.footnotes.length > 0) {
                         lineItem.type = BlockType.FOOTNOTES;
-                        const footnotes = lineItem.parsedElements.footnotes.map(() => <span key={ footnote }><a href={ "#Page " + (page.index + 1) }>{ footnote }</a>,</span>);
-                        foundFootnotes.push.apply(foundFootnotes, footnotes);
+                        // const footnotes = lineItem.parsedElements.footnotes.map(() => <span key={ footnote }><a href={ "#Page " + (page.index + 1) }>{ footnote }</a>,</span>);
+                        // foundFootnotes.push.apply(foundFootnotes, footnotes);
                     }
                 });
                 page.items = lineItems;
