@@ -20,7 +20,6 @@ import GatherBlocks from './model/transformations/textitemblock/GatherBlocks';
 import ToMarkdown from './model/transformations/ToMarkdown';
 import ToTextBlocks from './model/transformations/ToTextBlocks';
 import Transformation from './model/transformations/Transformation';
-import { stringify } from 'querystring';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -93,7 +92,7 @@ function fontParsed( fontMap:Map<string,any>, fontId:string, font:any) {
  * @param fontMap 
  * @param pages 
  */
-export function storePdfPages(metadata:Metadata, fontMap:Map<string,FONT>, pages:Array<Page>) {
+export function storePdfPages( _:Metadata, fontMap:Map<string,FONT>, pages:Array<Page>) {
 
   const transformations:Array<Transformation> = [
 
@@ -125,8 +124,9 @@ export function storePdfPages(metadata:Metadata, fontMap:Map<string,FONT>, pages
       lastTransformation = transformation;
   });
 
-  let text = '';
-  parseResult.pages.forEach(page => page.items.forEach(item => text += item + '\n' ))
+  const pageToText = (page:Page, start:string) => 
+          page.items.reduce( (result, item) => result.concat(`${item}\n`), start )
+  const text = parseResult.pages.reduce( (result, page) => pageToText(page, result), '' )
 
   console.log( text )
 
@@ -173,8 +173,10 @@ async function main(pdfPath: string) {
         //trigger resolving of fonts
 
         const fontId = item.fontName;
+        
         // if (!self.state.fontIds.has(fontId) && fontId.startsWith('g_d0')) {
         if (!fontMap.has(fontId) && fontId.startsWith('g_d0')) {
+          
           pdfDocument._transport.commonObjs.get(fontId,( font:any ) => fontParsed(fontMap, fontId, font) )
         //     self.state.document.transport.commonObjs.get(fontId, function(font) {
         //         self.fontParsed(fontId, font);
@@ -206,7 +208,7 @@ async function main(pdfPath: string) {
     }
 
     storePdfPages( metadata, fontMap, pages )
-    
+
   }
   catch (reason) {
     console.log(reason)
