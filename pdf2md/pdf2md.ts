@@ -10,17 +10,17 @@ import TextItem from './model/TextItem';
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
 
-const readFile = promisify( fs.readFile )
+const readFile = promisify(fs.readFile)
 
 /**
  * 
  * @param pdfPath 
  */
-async function main(pdfPath:string) {
+async function main(pdfPath: string) {
 
   try {
 
-    const data = new Uint8Array( await readFile(pdfPath))
+    const data = new Uint8Array(await readFile(pdfPath))
 
     const pdfDocument = await getDocument({
       data: data,
@@ -35,17 +35,17 @@ async function main(pdfPath:string) {
 
     const pages = pdfDocument.numPages;
 
-    for (let i=1; i <= pages; i++) {
+    for (let i = 1; i <= pages; i++) {
 
       // Get the first page.
-      const page = await pdfDocument.getPage(i) 
+      const page = await pdfDocument.getPage(i)
 
       const scale = 1.0;
-      const viewport = page.getViewport( { scale:scale } );
+      const viewport = page.getViewport({ scale: scale });
 
       const textContent = await page.getTextContent()
 
-      const textItems = textContent.items.map( item => {
+      const textItems = textContent.items.map(item => {
         //trigger resolving of fonts
 
         // const fontId = item.fontName;
@@ -58,34 +58,34 @@ async function main(pdfPath:string) {
         // }
 
         const tx = Util.transform( // eslint-disable-line no-undef
-            viewport.transform,
-            item.transform
+          viewport.transform,
+          item.transform
         );
 
         const fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
         const dividedHeight = item.height / fontHeight;
         return new TextItem({
-            x: Math.round(item.transform[4]),
-            y: Math.round(item.transform[5]),
-            width: Math.round(item.width),
-            height: Math.round(dividedHeight <= 1 ? item.height : dividedHeight),
-            text: item.str,
-            font: item.fontName
+          x: Math.round(item.transform[4]),
+          y: Math.round(item.transform[5]),
+          width: Math.round(item.width),
+          height: Math.round(dividedHeight <= 1 ? item.height : dividedHeight),
+          text: item.str,
+          font: item.fontName
         });
-    });
+      });
 
-    textItems.forEach( console.dir )
+      textItems.forEach(console.dir)
     }
   }
-  catch( reason ) {
-    console.log(reason) 
+  catch (reason) {
+    console.log(reason)
   }
 }
 
-  // STARTUP CODE
+// STARTUP CODE
 
-  (async () => {
-    const pdfPath = process.argv[2] || "guidelines.pdf";
+(async () => {
+  const pdfPath = process.argv[2] || "guidelines.pdf";
 
-    await main( pdfPath )
-  })()
+  await main(pdfPath)
+})()

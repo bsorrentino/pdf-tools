@@ -6,7 +6,7 @@ import HeadlineFinder from '../../HeadlineFinder';
 import { REMOVED_ANNOTATION, ADDED_ANNOTATION } from '../../Annotation';
 import BlockType from '../../markdown/BlockType';
 import { headlineByLevel } from '../../markdown/BlockType';
-import { isDigit, isNumber, wordMatch, hasOnly } from '../../stringFunctions'
+import { isDigit, isNumber, wordMatch, hasOnly } from '../../../stringFunctions'
 import Page from '../../Page';
 import TextItem from '../../TextItem';
 import {FONT} from '../../TextItem';

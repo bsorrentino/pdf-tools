@@ -5,8 +5,8 @@ import WordFormat from './markdown/WordFormat';
 import LineItem from './LineItem';
 import StashingStream from './StashingStream';
 import { ParsedElements } from './PageItem';
-import { isNumber, isListItemCharacter } from './stringFunctions'
-import { sortByX } from './pageItemFunctions'
+import { isNumber, isListItemCharacter } from '../stringFunctions'
+import { sortByX } from '../pageItemFunctions'
 
 // Converts text items which have been grouped to a line (through TextItemLineGrouper) to a single LineItem doing inline transformations like 
 //'whitespace removal', bold/emphasis annotation, link-detection, etc..

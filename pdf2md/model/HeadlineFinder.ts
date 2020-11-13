@@ -1,4 +1,4 @@
-import { normalizedCharCodeArray } from './stringFunctions'
+import { normalizedCharCodeArray } from '../stringFunctions'
 import LineItem from './LineItem';
 
 export default class HeadlineFinder {

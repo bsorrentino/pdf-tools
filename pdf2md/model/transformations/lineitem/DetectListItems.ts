@@ -3,7 +3,7 @@ import ParseResult from '../../ParseResult';
 import LineItem from '../../LineItem';
 import { REMOVED_ANNOTATION, ADDED_ANNOTATION, DETECTED_ANNOTATION } from '../../Annotation';
 import BlockType from '../../markdown/BlockType';
-import { isListItemCharacter, isNumberedListItem } from '../../stringFunctions';
+import { isListItemCharacter, isNumberedListItem } from '../../../stringFunctions';
 import { wordOf } from '../../Word';
 
 //Detect items starting with -, •, etc...

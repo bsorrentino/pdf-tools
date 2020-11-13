@@ -3,7 +3,7 @@ import ParseResult from '../../ParseResult.js';
 import { DETECTED_ANNOTATION } from '../../Annotation';
 import BlockType from '../../markdown/BlockType';
 import { headlineByLevel } from '../../markdown/BlockType';
-import { isListItem } from '../../stringFunctions';
+import { isListItem } from '../../../stringFunctions';
 import Page from '../../Page';
 
 //Detect headlines based on heights

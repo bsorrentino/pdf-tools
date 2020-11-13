@@ -1,6 +1,6 @@
 import { Enumify } from 'enumify';
-import { linesToText } from './WordType.jsx';
-import LineItemBlock from '../LineItemBlock.jsx';
+import { linesToText } from './WordType.js';
+import LineItemBlock from '../LineItemBlock';
 
 type ToText = ( block:LineItemBlock ) => string
 // An Markdown block
