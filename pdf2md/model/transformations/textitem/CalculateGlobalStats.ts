@@ -12,6 +12,7 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
     }
 
     transform(parseResult:ParseResult) {
+
         // Parse heights
         const heightToOccurrence:{ [key:string]:any } = {};
         const fontToOccurrence:{ [key:string]:number } = {};
@@ -48,10 +49,9 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
                 }
             });
         });
+
         const mostUsedDistance = parseInt(getMostUsedKey(distanceToOccurrence));
-
-
-        const fontIdToName = Array<any>();
+        const fontIdToName = Array<string>();
         const fontToFormats = new Map<string,string>();
 
         this.fontMap.forEach( (value:FONT, key:string) => {
@@ -84,9 +84,7 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
             return {
                 ...page,
                 items: page.items.map(textItem => {
-                    return {
-                        ...textItem,
-                    }
+                    return { ...textItem, }
                 })
             };
         });
