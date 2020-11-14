@@ -12,9 +12,9 @@ import { sortByX } from '../pageItemFunctions'
 //'whitespace removal', bold/emphasis annotation, link-detection, etc..
 export default class LineConverter {
 
-    fontToFormats:any
+    fontToFormats:Map<string,string>
     
-    constructor(fontToFormats:any) {
+    constructor(fontToFormats:Map<string,string>) {
         this.fontToFormats = fontToFormats;
     }
 
@@ -54,7 +54,7 @@ export default class LineConverter {
 }
 
 class WordDetectionStream extends StashingStream {
-    fontToFormats:any
+    fontToFormats:Map<string,string>
     footnoteLinks:Array<number> = []
     footnotes:Array<string> = []
     formattedWords = 0
@@ -64,7 +64,7 @@ class WordDetectionStream extends StashingStream {
     stashedNumber = false;
     currentItem?:any;
 
-    constructor(fontToFormats:any) {
+    constructor(fontToFormats:Map<string,string>) {
         super();
         this.fontToFormats = fontToFormats;
     }
@@ -116,7 +116,8 @@ class WordDetectionStream extends StashingStream {
 
     copyStashItemsAsText(stash:Array<any>, results:Array<Word>) {
         const format = this.fontToFormats.get(stash[0].font);
-        results.push(...this.itemsToWords(stash, format));
+        if( format)
+            results.push(...this.itemsToWords(stash, format));
     }
 
     itemsToWords(items:Array<any>, formatName:string):Array<Word> {
