@@ -2,7 +2,8 @@ import 'pdfjs-dist/es5/build/pdf.js';
 import fs from 'fs'
 import { promisify } from 'util'
 
-import { getDocument, PDFDocumentProxy, PDFMetadata, Util } from 'pdfjs-dist'
+import { getDocument, OPS, PDFDocumentProxy, PDFMetadata, PDFPageProxy, Util } from 'pdfjs-dist'
+
 import TextItem from './model/TextItem';
 import Metadata from './model/Metadata';
 import Page from './model/Page';
@@ -26,17 +27,18 @@ const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
 
 const readFile = promisify(fs.readFile)
+const checkFileExists = promisify(fs.access)
 
-function metadataParsed(metadata:PDFMetadata) {
+function metadataParsed(metadata: PDFMetadata) {
   //const metadataStage = this.state.progress.metadataStage();
   //metadataStage.stepsDone++;
   // this.setState({
   //     metadata: new Metadata(metadata),
   // });
-  return new Metadata( metadata )
+  return new Metadata(metadata)
 }
 
-function documentParsed(document:PDFDocumentProxy) {
+function documentParsed(document: PDFDocumentProxy) {
   // Object.keys( document ).forEach( console.log )
 
   // const metadataStage = this.state.progress.metadataStage();
@@ -50,7 +52,7 @@ function documentParsed(document:PDFDocumentProxy) {
   let pages = Array<Page>()
 
   for (let i = 0; i < numPages; i++) {
-      pages.push( new Page({ index: i }))
+    pages.push(new Page({ index: i }))
   }
 
   // this.setState({
@@ -61,7 +63,7 @@ function documentParsed(document:PDFDocumentProxy) {
   return pages
 }
 
-function pageParsed( pages:Array<Page>, index:number, textItems:Array<TextItem>) {
+function pageParsed(pages: Array<Page>, index: number, textItems: Array<TextItem>) {
   // const pageStage = this.state.progress.pageStage();
 
   // pageStage.stepsDone = pageStage.stepsDone + 1;
@@ -73,8 +75,8 @@ function pageParsed( pages:Array<Page>, index:number, textItems:Array<TextItem>)
 
 }
 
-function fontParsed( fontMap:Map<string,any>, fontId:string, font:any) {
-  console.dir( font )
+function fontParsed(fontMap: Map<string, any>, fontId: string, font: any) {
+  console.dir(font)
   // const fontStage = this.state.progress.fontStage();
   // this.state.fontMap.set(fontId, font); 
   // fontStage.stepsDone++;
@@ -83,7 +85,7 @@ function fontParsed( fontMap:Map<string,any>, fontId:string, font:any) {
   //         fontMap: this.state.fontMap,
   //     });
   // }
-  fontMap.set( fontId, font )
+  
 }
 
 /**
@@ -92,41 +94,42 @@ function fontParsed( fontMap:Map<string,any>, fontId:string, font:any) {
  * @param fontMap 
  * @param pages 
  */
-export function storePdfPages( _:Metadata, fontMap:Map<string,FONT>, pages:Array<Page>) {
+export function storePdfPages(_: Metadata, fontMap: Map<string, FONT>, pages: Array<Page>) {
 
-  const transformations:Array<Transformation> = [
+  const transformations: Array<Transformation> = [
 
-      new CalculateGlobalStats(fontMap),
-      new CompactLines(),
-      new RemoveRepetitiveElements(),
-      new VerticalToHorizontal(),
-      new DetectTOC(),
-      new DetectHeaders(),
-      new DetectListItems(),
+    new CalculateGlobalStats(fontMap),
+    new CompactLines(),
+    new RemoveRepetitiveElements(),
+    new VerticalToHorizontal(),
+    new DetectTOC(),
+    new DetectHeaders(),
+    new DetectListItems(),
 
-      new GatherBlocks(),
-      new DetectCodeQuoteBlocks(),
-      new DetectListLevels(),
+    new GatherBlocks(),
+    new DetectCodeQuoteBlocks(),
+    new DetectListLevels(),
 
-      new ToTextBlocks(),
-      new ToMarkdown()
+    new ToTextBlocks(),
+    new ToMarkdown()
   ]
 
-  let parseResult:ParseResult = { pages: pages }
+  let parseResult: ParseResult = { pages: pages }
 
-  let lastTransformation:Transformation;
+  let lastTransformation: Transformation;
 
   transformations.forEach(transformation => {
-      if (lastTransformation) {
-          parseResult = lastTransformation.completeTransform(parseResult);
-      }
-      parseResult = transformation.transform(parseResult);
-      lastTransformation = transformation;
+    if (lastTransformation) {
+      parseResult = lastTransformation.completeTransform(parseResult);
+    }
+    parseResult = transformation.transform(parseResult);
+    lastTransformation = transformation;
   });
 
-  const pageToText = (page:Page, start:string) => 
-          page.items.reduce( (result, item) => result.concat(`${item}\n`), start )
-  const text = parseResult.pages.reduce( (result, page) => pageToText(page, result), '' )
+  const pageToText = (page: Page, start: string) =>
+    page.items.reduce((result, item) => result.concat(`${item}\n`), start)
+
+  const text = parseResult.pages.reduce((result, page) => pageToText(page, result), '')
 
   console.log( text )
 
@@ -134,32 +137,93 @@ export function storePdfPages( _:Metadata, fontMap:Map<string,FONT>, pages:Array
 
 /**
  * 
+ * @param fontMap 
+ */
+async function loadLocalFonts(fontMap: Map<string, FONT>) {
+  const fontsFile = 'fonts.json'
+
+  try {
+    await checkFileExists(fontsFile)
+  }
+  catch (e) {
+    console.warn(`WARN: file ${fontsFile} doesn't exists!`)
+  }
+
+  try {
+    const contents = await readFile(fontsFile)
+
+    const fonts: { [name: string]: FONT } = JSON.parse(contents.toString())
+
+    Object.entries(fonts).forEach(([k, v]) => fontMap.set(k, v))
+
+  }
+  catch (e) {
+    console.warn(`WARN: error loading and evaluating ${fontsFile}! - ${e.message}`)
+  }
+
+  return fontMap
+}
+
+/**
+ * 
  * @param pdfPath 
  */
 async function main(pdfPath: string) {
-
   try {
-    
-    const fontMap = new Map<string,any>()
+    const fontMap = await loadLocalFonts(new Map<string, FONT>())
 
     const data = new Uint8Array(await readFile(pdfPath))
 
     const pdfDocument = await getDocument({
       data: data,
       cMapUrl: CMAP_URL,
-      cMapPacked: CMAP_PACKED,
+      cMapPacked: CMAP_PACKED
     }).promise
 
     const pages = documentParsed(pdfDocument)
 
     const originalMetadata = await pdfDocument.getMetadata()
+
+    const processComponentsInPage = async (page: PDFPageProxy) => {
+
+      const ops = await page.getOperatorList()
+
+      ops.fnArray.forEach((fn, j) => {
+
+        if (fn == OPS.setFont) {
+
+          const fontId = ops.argsArray[j][0];
+
+          if( !fontMap.has( fontId ) ) {
+
+            let font: FONT|null
+
+            try {
+
+              font = page.objs.get<FONT>(fontId)
+              if( font )
+                fontMap.set(fontId, font)
+  
+            }
+            catch (e) {
+              console.log(e.message)
+              fontMap.set( fontId, { name:'' } )
+            }
+  
+          }
+
+        }
+
+      })
+    }
+
     const metadata = metadataParsed(originalMetadata);
 
     console.log("# PDF document loaded.");
 
     const numPages = pdfDocument.numPages;
 
-    for (let i = 1; i <= numPages; i++) {
+    for (let i = 1; i <= 1; i++) {
 
       // Get the first page.
       const page = await pdfDocument.getPage(i)
@@ -169,29 +233,19 @@ async function main(pdfPath: string) {
 
       const textContent = await page.getTextContent()
 
+      await processComponentsInPage(page)
+
       const textItems = textContent.items.map(item => {
-        //trigger resolving of fonts
 
-        const fontId = item.fontName;
-        
-        // if (!self.state.fontIds.has(fontId) && fontId.startsWith('g_d0')) {
-        if (!fontMap.has(fontId) && fontId.startsWith('g_d0')) {
-          
-          pdfDocument._transport.commonObjs.get(fontId,( font:any ) => fontParsed(fontMap, fontId, font) )
-        //     self.state.document.transport.commonObjs.get(fontId, function(font) {
-        //         self.fontParsed(fontId, font);
-        //     });
-        //     self.state.fontIds.add(fontId);
-        //     fontStage.steps = self.state.fontIds.size;
-        }
-
-        const tx = Util.transform( // eslint-disable-line no-undef
+        const tx = Util.transform(
           viewport.transform,
           item.transform
         );
 
         const fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
         const dividedHeight = item.height / fontHeight;
+
+        //console.log( fontMap.get(item.fontName) )
 
         return new TextItem({
           x: Math.round(item.transform[4]),
@@ -204,10 +258,10 @@ async function main(pdfPath: string) {
 
       });
 
-      pageParsed( pages, i-1,  textItems)
+      pageParsed(pages, i - 1, textItems)
     }
 
-    storePdfPages( metadata, fontMap, pages )
+    storePdfPages(metadata, fontMap, pages)
 
   }
   catch (reason) {

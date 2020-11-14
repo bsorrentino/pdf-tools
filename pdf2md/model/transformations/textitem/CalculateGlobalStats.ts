@@ -1,6 +1,7 @@
 import ToTextItemTransformation from '../ToTextItemTransformation';
 import ParseResult from '../../ParseResult';
 import WordFormat from '../../markdown/WordFormat';
+import { Enumify } from 'enumify';
 
 export default class CalculateGlobalStats extends ToTextItemTransformation {
     fontMap:Map<string,FONT>
@@ -13,9 +14,9 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
     transform(parseResult:ParseResult) {
         // Parse heights
         const heightToOccurrence:{ [key:string]:any } = {};
-        const fontToOccurrence:{ [key:string]:any } = {};
+        const fontToOccurrence:{ [key:string]:number } = {};
         let maxHeight = 0;
-        let maxHeightFont:number|undefined;
+        let maxHeightFont:string|undefined;
         parseResult.pages.forEach(page => {
             page.items.forEach(item => {
                 heightToOccurrence[item.height] = heightToOccurrence[item.height] ? heightToOccurrence[item.height] + 1 : 1;
@@ -51,11 +52,16 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
 
 
         const fontIdToName = Array<any>();
-        const fontToFormats = new Map();
-        this.fontMap.forEach( (value:any, key:any) => {
-            fontIdToName.push(key + " = " + value.name)
+        const fontToFormats = new Map<string,string>();
+
+        this.fontMap.forEach( (value:FONT, key:string) => {
+            
+            fontIdToName.push( `${key}=${value.name}`)
+
             const fontName = value.name.toLowerCase();
-            let format:any;
+            
+            let format:Enumify|null = null
+
             if (key == mostUsedFont) {
                 format = null;
             } else if (fontName.includes('bold') && (fontName.includes('oblique') || fontName.includes('italic'))) {
@@ -68,12 +74,10 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
                 format = WordFormat.BOLD;
             }
             if (format) {
-                fontToFormats.set(key, format.name);
+                fontToFormats.set(key, format.enumKey);
             }
         });
         fontIdToName.sort();
-
-
 
         //Make a copy of the originals so all following transformation don't modify them
         const newPages = parseResult.pages.map(page => {
