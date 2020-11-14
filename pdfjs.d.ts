@@ -1,6 +1,6 @@
 /// <reference types="pdfjs-dist" />
 
-import { PDFPageProxy, PDFDocumentProxy, PDFPromise } from "pdfjs-dist";
+import { PDFPageProxy, PDFDocumentProxy, PDFPromise, PDFObjects } from "pdfjs-dist";
 
 //
 // extend third-party declaration files
@@ -28,16 +28,12 @@ declare module "pdfjs-dist" {
         data:Uint8ClampedArray
     }
     
-    interface PDFObj {
-
-        get( op:string ):PDFImage|any
-    }
-
-
-    interface PDFOps {
+    interface PDFObjects {
         fnArray:Array<integer>
 
         argsArray: string[][]
+        get<T>( op:string , callback?:(v:T) => void): T|null;
+
     }
 
     interface PDFMetadata {
@@ -60,16 +56,16 @@ declare module "pdfjs-dist" {
     }
 
     interface PDFPageProxy {
-        objs: PDFObj
+        objs: PDFObjects
 
-        getOperatorList(): Promise<PDFOps>
+        getOperatorList(): Promise<PDFObjects>
+
+        commonObjs:PDFObjects 
     }
 
     interface PDFDocumentProxy {
         _transport:{
-            commonObjs: {
-                get( key:string, value:( value:any ) => void )
-            }
+            commonObjs: PDFObjects
         }
         getMetadata():PDFPromise<PDFMetadata>
     }
