@@ -1,5 +1,6 @@
 import 'pdfjs-dist/es5/build/pdf.js';
 import fs from 'fs'
+import path from 'path'
 import { promisify } from 'util'
 
 import { getDocument, OPS, PDFDocumentProxy, PDFMetadata, PDFPageProxy, Util } from 'pdfjs-dist'
@@ -27,6 +28,7 @@ const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
 
 const readFile = promisify(fs.readFile)
+const writeFile = promisify(fs.writeFile)
 const checkFileExists = promisify(fs.access)
 
 function metadataParsed(metadata: PDFMetadata) {
@@ -94,7 +96,7 @@ function fontParsed(fontMap: Map<string, any>, fontId: string, font: any) {
  * @param fontMap 
  * @param pages 
  */
-export function storePdfPages(_: Metadata, fontMap: Map<string, FONT>, pages: Array<Page>) {
+export async function storePdfPages(_: Metadata, fontMap: Map<string, FONT>, pages: Array<Page>) {
 
   const transformations: Array<Transformation> = [
 
@@ -131,7 +133,9 @@ export function storePdfPages(_: Metadata, fontMap: Map<string, FONT>, pages: Ar
 
   const text = parseResult.pages.reduce((result, page) => pageToText(page, result), '')
 
-  console.log( text )
+  const outPath = path.join('bin','out.md')
+  await writeFile( outPath, text )
+  console.log( `file ${outPath} generated` )
 
 }
 
@@ -206,8 +210,7 @@ async function main(pdfPath: string) {
   
             }
             catch (e) {
-              console.log(e.message)
-              fontMap.set( fontId, { name:'' } )
+              console.debug(e.message)
             }
   
           }
@@ -223,7 +226,8 @@ async function main(pdfPath: string) {
 
     const numPages = pdfDocument.numPages;
 
-    for (let i = 1; i <= 1; i++) {
+    for (let i = 1; i <= numPages; i++) {
+    //for (let i = 5; i <= 5; i++) {
 
       // Get the first page.
       const page = await pdfDocument.getPage(i)

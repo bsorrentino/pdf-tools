@@ -60,22 +60,26 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
 
             const fontName = value.name.toLowerCase();
             
-            let format:Enumify|null = null
+            let format:WordFormat|null = null
+
+            const isBold = () => fontName.includes('bold')
+            const isItalic = () => fontName.includes('oblique') || fontName.includes('italic')
 
             if (key == mostUsedFont) {
                 format = null;
-            } else if (fontName.includes('bold') && (fontName.includes('oblique') || fontName.includes('italic'))) {
-                format = WordFormat.BOLD_OBLIQUE;
-            } else if (fontName.includes('bold')) {
+            } else if (isBold() && isItalic() ) {
+                format = WordFormat.BOLD_OBLIQUE;               
+            } else if (isBold()) {
                 format = WordFormat.BOLD;
-            } else if (fontName.includes('oblique') || fontName.includes('italic')) {
+            } else if ( isItalic() ) {
                 format = WordFormat.OBLIQUE;
             } else if (fontName === maxHeightFont) {
                 format = WordFormat.BOLD;
-            }
-            if (format) {
+            } 
+
+            if (format) 
                 fontToFormats.set(key, format.enumKey);
-            }
+                
         });
         fontIdToName.sort();
 
