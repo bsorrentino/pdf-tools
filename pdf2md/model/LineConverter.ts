@@ -116,11 +116,10 @@ class WordDetectionStream extends StashingStream {
 
     copyStashItemsAsText(stash:Array<any>, results:Array<Word>) {
         const format = this.fontToFormats.get(stash[0].font);
-        if( format)
-            results.push(...this.itemsToWords(stash, format));
+        results.push(...this.itemsToWords(stash, format));
     }
 
-    itemsToWords(items:Array<any>, formatName:string):Array<Word> {
+    itemsToWords(items:Array<any>, formatName?:string):Array<Word> {
         const combinedText = combineText(items);
         const words = combinedText.split(' ');
         const format:WordFormat|null = formatName ? <WordFormat>WordFormat.enumValueOf(formatName) : null;
