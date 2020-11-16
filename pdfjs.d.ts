@@ -31,8 +31,8 @@ declare module "pdfjs-dist" {
     interface PDFObjects {
         fnArray:Array<integer>
 
-        argsArray: string[][]
-        get<T>( op:string , callback?:(v:T) => void): T|null;
+        argsArray: any[][]
+        get<T>( op:any , callback?:(v:T) => void): T|null;
 
     }
 

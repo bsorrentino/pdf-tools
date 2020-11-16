@@ -2,8 +2,9 @@ import 'pdfjs-dist/es5/build/pdf.js';
 import fs from 'fs'
 import path from 'path'
 import { promisify } from 'util'
+import assert from 'assert'
 
-import { getDocument, OPS, PDFDocumentProxy, PDFMetadata, PDFPageProxy, Util } from 'pdfjs-dist'
+import { getDocument, OPS, PDFDocumentProxy, PDFImage, PDFMetadata, PDFObjects, PDFPageProxy, Util } from 'pdfjs-dist'
 
 import TextItem from './model/TextItem';
 import Metadata from './model/Metadata';
@@ -22,6 +23,7 @@ import GatherBlocks from './model/transformations/textitemblock/GatherBlocks';
 import ToMarkdown from './model/transformations/ToMarkdown';
 import ToTextBlocks from './model/transformations/ToTextBlocks';
 import Transformation from './model/transformations/Transformation';
+import { createHook } from 'async_hooks';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -66,28 +68,8 @@ function documentParsed(document: PDFDocumentProxy) {
 }
 
 function pageParsed(pages: Array<Page>, index: number, textItems: Array<TextItem>) {
-  // const pageStage = this.state.progress.pageStage();
-
-  // pageStage.stepsDone = pageStage.stepsDone + 1;
-  // this.state.pages[index].items = textItems; 
-  // this.setState({
-  //     progress: this.state.progress
-  // });
   pages[index].items = textItems
 
-}
-
-function fontParsed(fontMap: Map<string, any>, fontId: string, font: any) {
-  console.dir(font)
-  // const fontStage = this.state.progress.fontStage();
-  // this.state.fontMap.set(fontId, font); 
-  // fontStage.stepsDone++;
-  // if (this.state.progress.activeStage() === fontStage) {
-  //     this.setState({ //force rendering
-  //         fontMap: this.state.fontMap,
-  //     });
-  // }
-  
 }
 
 /**
@@ -168,6 +150,14 @@ async function loadLocalFonts(fontMap: Map<string, FONT>) {
   return fontMap
 }
 
+type TransformationMatrix = [ 
+  scalex:number, 
+  skevX:number, 
+  skevY:number, 
+  scaleY:number, 
+  transformX:number, 
+  transformY:number ]
+
 /**
  * 
  * @param pdfPath 
@@ -188,33 +178,77 @@ async function main(pdfPath: string) {
 
     const originalMetadata = await pdfDocument.getMetadata()
 
+    // process Components In Page
+    //
+    // Process Fonts
+    // Process Images
     const processComponentsInPage = async (page: PDFPageProxy) => {
 
       const ops = await page.getOperatorList()
 
+      console.log( 'transform', OPS.transform )
+
+      let imageMatrix:TransformationMatrix|null = null
+
       ops.fnArray.forEach((fn, j) => {
 
-        if (fn == OPS.setFont) {
+        // const s = Object.entries(OPS).find( ([_,v]) => v === fn )
+        // if( s ) console.log( `Operation: ${fn}: ${s[0]} at ${j}` )
+        
+        let args = ops.argsArray[j]
 
-          const fontId = ops.argsArray[j][0];
+        switch( fn ) {
+          case OPS.setFont:
 
-          if( !fontMap.has( fontId ) ) {
+            const fontId = args[0];
 
-            let font: FONT|null
+            if( !fontMap.has( fontId ) ) {
 
-            try {
-
-              font = page.objs.get<FONT>(fontId)
-              if( font )
-                fontMap.set(fontId, font)
-  
+              let font: FONT|null
+              try {
+                font = page.objs.get<FONT>(fontId)
+                if( font )
+                  fontMap.set(fontId, font)
+              }
+              catch (e) {
+                console.debug(e.message)
+              }
+    
             }
-            catch (e) {
-              console.debug(e.message)
-            }
-  
-          }
+            break;    
+            // @see 
+            // https://github.com/mozilla/pdf.js/issues/10498
+            // https://github.com/TomasHubelbauer/globus/blob/master/index.mjs#L63
+            //
+            case OPS.transform:
+              assert( j < ops.argsArray.length, `index ${j} exceed the argsArray size ${ops.argsArray.length}`)
+ 
+              imageMatrix = <TransformationMatrix>args
+              //console.log( imageMatrix )  
 
+              break;
+            case OPS.paintJpegXObject:
+            case OPS.paintImageXObject:
+
+              const position = { x:0, y:0 }
+
+              if( imageMatrix ) {
+                position.x = imageMatrix ? Math.round(imageMatrix[4]) : 0
+                position.y = imageMatrix ? Math.round(imageMatrix[5]) : 0
+              }
+
+              // console.log( 'image position', position )
+
+              const op = args[0];
+
+              const img = page.objs.get<PDFImage>(op);
+
+              // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
+
+              imageMatrix = null
+              break
+            default:
+              break;
         }
 
       })
@@ -226,13 +260,14 @@ async function main(pdfPath: string) {
 
     const numPages = pdfDocument.numPages;
 
-    for (let i = 1; i <= numPages; i++) {
-    //for (let i = 5; i <= 5; i++) {
+    //for (let i = 1; i <= numPages; i++) {
+    for (let i = 1; i <= 1; i++) {
 
       // Get the first page.
       const page = await pdfDocument.getPage(i)
 
       const scale = 1.0;
+      
       const viewport = page.getViewport({ scale: scale });
 
       const textContent = await page.getTextContent()
@@ -241,19 +276,19 @@ async function main(pdfPath: string) {
 
       const textItems = textContent.items.map(item => {
 
-        const tx = Util.transform(
-          viewport.transform,
-          item.transform
-        );
+        const tx = Util.transform( viewport.transform, item.transform ) 
+        
+        const fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]))
 
-        const fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
         const dividedHeight = item.height / fontHeight;
 
-        //console.log( fontMap.get(item.fontName) )
+        const position = { x:Math.round(item.transform[4]), y:Math.round(item.transform[5]) }
+
+        // console.log( 'text position', position, item.str )
 
         return new TextItem({
-          x: Math.round(item.transform[4]),
-          y: Math.round(item.transform[5]),
+          x: position.x,
+          y: position.y,
           width: Math.round(item.width),
           height: Math.round(dividedHeight <= 1 ? item.height : dividedHeight),
           text: item.str,
