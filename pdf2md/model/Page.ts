@@ -15,7 +15,7 @@ export default class Page {
 
     static fontMap = new Map<string, FONT>()
 
-    constructor( private index:number ) {}
+    constructor( public index:number ) {}
 
     static async of( proxy:PDFPageProxy ) {
 

@@ -1,7 +1,6 @@
 import ToTextItemTransformation from '../ToTextItemTransformation';
 import ParseResult from '../../ParseResult';
 import WordFormat from '../../markdown/WordFormat';
-import { Enumify } from 'enumify';
 
 export default class CalculateGlobalStats extends ToTextItemTransformation {
     fontMap:Map<string,FONT>
@@ -11,7 +10,7 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
         this.fontMap = fontMap;
     }
 
-    transform(parseResult:ParseResult) {
+    transform(parseResult:ParseResult):ParseResult {
 
         // Parse heights
         const heightToOccurrence:{ [key:string]:any } = {};
