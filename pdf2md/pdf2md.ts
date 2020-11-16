@@ -42,47 +42,17 @@ function metadataParsed(metadata: PDFMetadata) {
   return new Metadata(metadata)
 }
 
-function documentParsed(document: PDFDocumentProxy) {
-  // Object.keys( document ).forEach( console.log )
-
-  // const metadataStage = this.state.progress.metadataStage();
-  // const pageStage = this.state.progress.pageStage();
-  // metadataStage.stepsDone++;
-
-  const numPages = document.numPages
-  // pageStage.steps = numPages;
-  // pageStage.stepsDone;
-
-  let pages = Array<Page>()
-
-  for (let i = 0; i < numPages; i++) {
-    pages.push(new Page({ index: i }))
-  }
-
-  // this.setState({
-  //     document: document,
-  //     pages: pages,
-  // });
-
-  return pages
-}
-
-function pageParsed(pages: Array<Page>, index: number, textItems: Array<TextItem>) {
-  pages[index].items = textItems
-
-}
-
 /**
  * 
  * @param metadata 
  * @param fontMap 
  * @param pages 
  */
-export async function storePdfPages(_: Metadata, fontMap: Map<string, FONT>, pages: Array<Page>) {
+export async function storePdfPages(_: Metadata, pages: Array<Page>) {
 
   const transformations: Array<Transformation> = [
 
-    new CalculateGlobalStats(fontMap),
+    new CalculateGlobalStats(Page.fontMap),
     new CompactLines(),
     new RemoveRepetitiveElements(),
     new VerticalToHorizontal(),
@@ -164,8 +134,8 @@ type TransformationMatrix = [
  */
 async function main(pdfPath: string) {
   try {
-    const fontMap = await loadLocalFonts(new Map<string, FONT>())
-
+    Page.fontMap = await loadLocalFonts(new Map<string, FONT>())
+    
     const data = new Uint8Array(await readFile(pdfPath))
 
     const pdfDocument = await getDocument({
@@ -174,7 +144,7 @@ async function main(pdfPath: string) {
       cMapPacked: CMAP_PACKED
     }).promise
 
-    const pages = documentParsed(pdfDocument)
+    const pages = Array<Page>()
 
     const originalMetadata = await pdfDocument.getMetadata()
 
@@ -184,9 +154,11 @@ async function main(pdfPath: string) {
     // Process Images
     const processComponentsInPage = async (page: PDFPageProxy) => {
 
+      const result = await Page.of( page )
+
       const ops = await page.getOperatorList()
 
-      console.log( 'transform', OPS.transform )
+      // console.log( 'transform', OPS.transform )
 
       let imageMatrix:TransformationMatrix|null = null
 
@@ -202,13 +174,13 @@ async function main(pdfPath: string) {
 
             const fontId = args[0];
 
-            if( !fontMap.has( fontId ) ) {
+            if( !Page.fontMap.has( fontId ) ) {
 
               let font: FONT|null
               try {
                 font = page.objs.get<FONT>(fontId)
                 if( font )
-                  fontMap.set(fontId, font)
+                  Page.fontMap.set(fontId, font)
               }
               catch (e) {
                 console.debug(e.message)
@@ -244,6 +216,8 @@ async function main(pdfPath: string) {
               const img = page.objs.get<PDFImage>(op);
 
               // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
+              if( img )
+                result.images.push( img )
 
               imageMatrix = null
               break
@@ -252,6 +226,8 @@ async function main(pdfPath: string) {
         }
 
       })
+
+      return result
     }
 
     const metadata = metadataParsed(originalMetadata);
@@ -260,47 +236,19 @@ async function main(pdfPath: string) {
 
     const numPages = pdfDocument.numPages;
 
-    //for (let i = 1; i <= numPages; i++) {
-    for (let i = 1; i <= 1; i++) {
+    for (let i = 1; i <= numPages; i++) {
+    // for (let i = 1; i <= 1; i++) {
 
       // Get the first page.
       const page = await pdfDocument.getPage(i)
 
-      const scale = 1.0;
-      
-      const viewport = page.getViewport({ scale: scale });
+      const pageInfo = await processComponentsInPage(page)
 
-      const textContent = await page.getTextContent()
+      pages.push( pageInfo )
 
-      await processComponentsInPage(page)
-
-      const textItems = textContent.items.map(item => {
-
-        const tx = Util.transform( viewport.transform, item.transform ) 
-        
-        const fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]))
-
-        const dividedHeight = item.height / fontHeight;
-
-        const position = { x:Math.round(item.transform[4]), y:Math.round(item.transform[5]) }
-
-        // console.log( 'text position', position, item.str )
-
-        return new TextItem({
-          x: position.x,
-          y: position.y,
-          width: Math.round(item.width),
-          height: Math.round(dividedHeight <= 1 ? item.height : dividedHeight),
-          text: item.str,
-          font: item.fontName
-        });
-
-      });
-
-      pageParsed(pages, i - 1, textItems)
     }
 
-    storePdfPages(metadata, fontMap, pages)
+    storePdfPages(metadata, pages)
 
   }
   catch (reason) {
