@@ -3,7 +3,7 @@ import fs from 'fs'
 import { promisify } from 'util'
 
 import { getDocument, OPS, PDFImage } from 'pdfjs-dist'
-import { writePageImage } from './pdfjs'
+import { writePageImage } from './pdf2md.image';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";

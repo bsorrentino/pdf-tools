@@ -1,15 +1,10 @@
-/// <reference path="pdfjs.d.ts" />
-
+import { createCanvas } from "canvas"
+import { assert } from "console"
+import fs from "fs"
 import path from 'path'
-import fs from 'fs'
 import { promisify } from 'util'
-import assert = require('assert')
-import Jimp = require('jimp')
-import { PDFImage, PDFPageProxy } from 'pdfjs-dist'
-
-const Canvas = require("canvas")
-
-const writeFile = promisify( fs.writeFile )
+import Jimp from "jimp/*"
+import { PDFImage, PDFPageProxy } from "pdfjs-dist"
 
 enum PDFImageKind {
     GRAYSCALE_1BPP = 1,
@@ -17,6 +12,7 @@ enum PDFImageKind {
     RGBA_32BPP = 3
 }
 
+const writeFileAsync = promisify( fs.writeFile )
 /**
  * 
  * @param img 
@@ -90,7 +86,7 @@ export async function writePageImage( img:PDFImage, name:string) {
   
     create(width:number, height:number):CanvasAndContext {
       assert(width > 0 && height > 0, "Invalid canvas size");
-      var canvas = Canvas.createCanvas(width, height);
+      var canvas = createCanvas(width, height);
       var context = canvas.getContext("2d");
       return {
         canvas: canvas,
@@ -139,6 +135,6 @@ export async function writePageImage( img:PDFImage, name:string) {
         const content = canvasAndContext.canvas.toBuffer();
         
         //console.dir( page )
-        await writeFile( path.join('bin', `page-${page.pageIndex}.png`), content )  
+        await writeFileAsync( path.join('bin', `page-${page.pageIndex}.png`), content )  
   }
   
