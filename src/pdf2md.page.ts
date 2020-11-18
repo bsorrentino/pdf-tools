@@ -26,15 +26,6 @@ class Row {
     get containsImage() { return this.image !== undefined }
     get containsWords() { return this.words !== undefined }
 
-    get content() {
-        if (this.containsImage) {
-            return [this.image]
-        }
-        if (this.containsWords) {
-            return this.enhancedText
-        }
-        assert(false, `cannot get content from row at y ${this.y}!`)
-    }
     get enhancedText() {
         assert(this.words, 'enhanceText works only for text Row!')
         const init = {
@@ -102,6 +93,50 @@ class Rows {
         return this
     }
 
+}
+
+type ConsoleFormat = {
+    x?:number
+    y?:number
+    width?:number
+    height?:number
+    image?:string
+    font?:string
+    text?:string
+}
+
+class ConsoleOutput {
+
+    lines = Array<ConsoleFormat>()
+
+    appendRow( row:Row ) {
+
+        if (row.containsImage) {
+            const v = row.image
+            this.lines.push( { x:v?.x, y:v?.y, width:v?.width, height:v?.height, image:v?.url||'undefined' } )
+        }
+        if (row.containsWords) {
+            const v = row.words![0]
+            const e = row.enhancedText
+            const maxw = row.words?.reduce( (result, word) => result += word.width, 0 )
+            const maxh = e.reduce( (result, etext) => result += etext.height, 0 )
+            
+            const formats = e.map( (etext, i) => {
+                const text = etext.text.replace(/(.{80})..+/, "$1…")
+                const common = { image:undefined, text:text, font:etext.font }
+                if( i == 0 ) {
+                    return { x:v?.x, y:v?.y, width:maxw, height:maxh, ...common  }
+                }
+                return common
+            })
+            
+            this.lines.push( ...formats )
+            
+        }
+
+    }
+
+    
 }
 
 function mergeItemsArray(a: Array<Rect>, b: Array<Rect>): Array<Rect> {
@@ -219,13 +254,16 @@ export async function processPage(proxy: PDFPageProxy, fontMap:Map<string, FONT>
 
     const items = mergeItemsArray(words, images)
 
-    items.sort((a, b) => {
+    const page = items.sort((a, b) => {
         const r = b.y - a.y
         return (r === 0) ? a.x - b.x : r
     })
-        .reduce((rows, item) => rows.process(item), new Rows())
-        .rows
-        .forEach((row) => console.table(row.content))
+    .reduce((rows, item) => rows.process(item), new Rows())
+
+    // Debug
+    const consoleOutput = new ConsoleOutput()
+    page.rows.forEach( row => consoleOutput.appendRow(row) )
+    console.table( consoleOutput.lines )
 
 }
 
