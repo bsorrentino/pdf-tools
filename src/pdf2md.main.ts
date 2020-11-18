@@ -76,8 +76,7 @@ async function main(pdfPath: string) {
 
 // STARTUP CODE
 
-(async () => {
-  const pdfPath = process.argv[2] || "guidelines.pdf";
 
-  await main(pdfPath)
-})()
+const pdfPath = process.argv[2] || "guidelines.pdf";
+
+main(pdfPath).then( () => {} )
