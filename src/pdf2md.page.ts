@@ -135,7 +135,6 @@ class ConsoleOutput {
         }
 
     }
-
     
 }
 
