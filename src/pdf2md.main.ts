@@ -28,7 +28,6 @@ async function main(pdfPath: string) {
 
     const globals = new Globals()
 
-    const fontMap = await loadLocalFonts( globals.fontMap )
     
     const data = new Uint8Array(await readFile(pdfPath))
 

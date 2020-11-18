@@ -1,3 +1,4 @@
+import { assert } from 'console'
 import path from 'path'
 
 export interface Font {
@@ -46,27 +47,68 @@ export class EnhancedText {
 }
 
 
+type FontStat = Font & { occurrence:number }
+
 export class Globals {
-    
-    fontMap = new Map<string, Font>()
-    private _textHeights = new Set<number>()
+    //mostUsedFont: Font|null = null
+    //maxHeightFont = 0 
+    //mostUsedDistance = 0
+    //mostUsedHeight: number = 0
+    //maxHeight  = 0
+
+    private _fontMap = new Map<string, FontStat>()
+    private _textHeights = new Map<number,number>()
 
     outDir:string
     imageUrlPrefix:string
 
-    addTextHeight( h:number ) {
-        this._textHeights.add(h)
+    addFont( fontId:string, font:Font ) {
+
+        assert( font, `font ${fontId} is not valied ${font}`)
+
+        let value = this._fontMap.get( fontId ) || { ...font, occurrence: 0}   
+        
+        value.occurrence++
+
+        this._fontMap.set( fontId, value )
+
     }
+
+    getFont( fontId:string ):Font {
+        return this._fontMap.get( fontId ) as Font
+    }
+    
+    addTextHeight( height:number ) {
+
+        let occurrence = this._textHeights.get( height ) || 0        
+        
+        this._textHeights.set( height, ++occurrence )    
+    
+    }
+
+    get mostUsedFont() {
+        const [k,_] =  Array.from(this._fontMap.entries()).reduce( ( [k1,v1], [k,v] ) => (v.occurrence > v1.occurrence) ? [k,v] : [k1,v1], ['',{ occurrence:0 }] )
+        return k
+    }
+
+    get mostUsedTextHeight() {
+        const [k,_] =  Array.from(this._textHeights.entries()).reduce( ( [k1,v1], [k,v] ) => (v > v1) ? [k,v] : [k1,v1], [0,-1] )
+        return k
+    }
+
+    get maxTextHeight() {
+        return Array.from(this._textHeights.keys()).reduce( (result, h) => (h > result) ? h : result  )
+    }
+
     get textHeights() {
-        const result = Array.from(this._textHeights.values()).sort( (a,b) => a - b )
-        result.shift() // remove first element (minimum)
-        return result
+        return Array.from(this._textHeights.keys()).sort( (a,b) => a - b )
     }
 
     constructor( ) {
 
         this.outDir = path.join( process.cwd(), 'out' )
         this.imageUrlPrefix = process.env['IMAGE_URL'] || ''
+
     }
 
 }

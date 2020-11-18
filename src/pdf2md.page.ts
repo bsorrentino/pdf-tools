@@ -184,19 +184,16 @@ export async function processPage(proxy: PDFPageProxy, globals:Globals ) {
 
                 const fontId = args[0];
 
-                if (!globals.fontMap.has(fontId)) {
-
-                    let font: Font | null
-                    try {
-                        font = proxy.objs.get<Font>(fontId)
-                        if (font)
-                        globals.fontMap.set(fontId, font)
-                    }
-                    catch (e) {
-                        console.debug(e.message)
-                    }
-
+                let font: Font | null
+                try {
+                    font = proxy.objs.get<Font>(fontId)
+                    if (font)
+                        globals.addFont(fontId, font)
                 }
+                catch (e) {
+                    console.debug(e.message)
+                }
+
                 break;
             // @see 
             // https://github.com/mozilla/pdf.js/issues/10498

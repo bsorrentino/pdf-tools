@@ -1,6 +1,32 @@
-import { Globals } from "./pdf2md.model";
+import { Enumify } from "enumify";
+import { Font, Globals } from "./pdf2md.model";
 import { Page } from "./pdf2md.page";
 
+
+class BlockType extends Enumify {
+
+
+}
+
+function processFont( fontId:string, globals:Globals ) {
+
+/*    
+    const isBold = () => fontName.includes('bold')
+    const isItalic = () => fontName.includes('oblique') || fontName.includes('italic')
+
+    if (key == mostUsedFont) {
+        format = null;
+    } else if (isBold() && isItalic() ) {
+        format = WordFormat.BOLD_OBLIQUE;               
+    } else if (isBold()) {
+        format = WordFormat.BOLD;
+    } else if ( isItalic() ) {
+        format = WordFormat.OBLIQUE;
+    } else if (fontName === maxHeightFont) {
+        format = WordFormat.BOLD;
+    } 
+*/
+}
 
 export function toMarkdown( page:Page, globals:Globals ) {
 
