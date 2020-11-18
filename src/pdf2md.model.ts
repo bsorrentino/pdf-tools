@@ -1,3 +1,10 @@
+import path from 'path'
+
+export interface Font {
+    name:string
+}
+
+
 export interface Rect {
     x: number
     y: number
@@ -36,4 +43,30 @@ export class EnhancedText {
         }
         return false
     }
+}
+
+
+export class Globals {
+    
+    fontMap = new Map<string, Font>()
+    private _textHeights = new Set<number>()
+
+    outDir:string
+    imageUrlPrefix:string
+
+    addTextHeight( h:number ) {
+        this._textHeights.add(h)
+    }
+    get textHeights() {
+        const result = Array.from(this._textHeights.values()).sort( (a,b) => a - b )
+        result.shift() // remove first element (minimum)
+        return result
+    }
+
+    constructor( ) {
+
+        this.outDir = path.join( process.cwd(), 'out' )
+        this.imageUrlPrefix = process.env['IMAGE_URL'] || ''
+    }
+
 }

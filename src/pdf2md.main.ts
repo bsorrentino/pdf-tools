@@ -1,25 +1,34 @@
 import 'pdfjs-dist/es5/build/pdf.js';
 import fs from 'fs'
+import path from 'path'
+
 import { promisify } from 'util'
 
 import { getDocument } from 'pdfjs-dist'
 
-import { processPage } from './pdf2md.page';
+import { processPage, Page } from './pdf2md.page';
 import { loadLocalFonts } from './pdf2md.font';
+import { Globals } from './pdf2md.model';
+import { toMarkdown } from './pdf2md.markdown';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
 
 const readFile = promisify(fs.readFile)
+const writeFile = promisify(fs.writeFile)
 
 /**
  * 
  * @param pdfPath 
  */
 async function main(pdfPath: string) {
+
   try {
-    const fontMap = await loadLocalFonts(new Map<string, FONT>())
+
+    const globals = new Globals()
+
+    const fontMap = await loadLocalFonts( globals.fontMap )
     
     const data = new Uint8Array(await readFile(pdfPath))
 
@@ -29,20 +38,30 @@ async function main(pdfPath: string) {
       cMapPacked: CMAP_PACKED
     }).promise
 
+    const numPages = pdfDocument.numPages
+
+    const pages = Array<Page>(numPages)
+    
     //const originalMetadata = await pdfDocument.getMetadata()
 
-    console.log("# PDF document loaded.");
-
-
-    //for (let i = 1; i <= numPages; i++) {
-    for (let i = 9; i <= 9; i++) {
+    for (let i = 1; i <= numPages; i++) {
+    //for (let i = 9; i <= 9; i++) {
 
       // Get the first page.
-      const page = await pdfDocument.getPage(i)
+      const pdfPage = await pdfDocument.getPage(i)
 
-      await processPage( page, fontMap )
+      const page = await processPage( pdfPage , globals )
+
+      pages.push( page )
 
     }
+
+    const content = pages.map( page => toMarkdown( page, globals ) )
+                          .reduce( (result, pageText ) => result.concat(pageText), '')
+
+    await writeFile( path.join( globals.outDir, 'out.md'), content )
+
+    console.table( globals.textHeights )
 
   }
   catch (reason) {

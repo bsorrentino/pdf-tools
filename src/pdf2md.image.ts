@@ -3,8 +3,9 @@ import { assert } from "console"
 import fs from "fs"
 import path from 'path'
 import { promisify } from 'util'
-import Jimp from "jimp/*"
+import Jimp from 'jimp'
 import { PDFImage, PDFPageProxy } from "pdfjs-dist"
+import { Globals } from "./pdf2md.model"
 
 enum PDFImageKind {
     GRAYSCALE_1BPP = 1,
@@ -13,12 +14,13 @@ enum PDFImageKind {
 }
 
 const writeFileAsync = promisify( fs.writeFile )
+
 /**
  * 
  * @param img 
  * @param name 
  */
-export async function writePageImage( img:PDFImage, name:string) {
+export async function writePageImage( img:PDFImage, name:string, globals:Globals) {
 
     //console.log( `image ${name} - kind: ${img.kind}`)
     try {
@@ -61,7 +63,7 @@ export async function writePageImage( img:PDFImage, name:string) {
             
         }
       }
-      jimg.write(path.join('bin', `${name}.png`))
+      jimg.write(path.join(globals.outDir, `${name}.png`))
     }
     catch( error ) {
       console.error( `Error:  ${error}`);
@@ -113,7 +115,7 @@ export async function writePageImage( img:PDFImage, name:string) {
     }
   }
   
-  export async function writePageAsImage( page:PDFPageProxy ) {
+  export async function writePageAsImage( page:PDFPageProxy, globals:Globals ) {
         // Render the page on a Node canvas with 100% scale.
         const viewport = page.getViewport({ scale: 1.0 });
       
@@ -135,6 +137,6 @@ export async function writePageImage( img:PDFImage, name:string) {
         const content = canvasAndContext.canvas.toBuffer();
         
         //console.dir( page )
-        await writeFileAsync( path.join('bin', `page-${page.pageIndex}.png`), content )  
+        await writeFileAsync( path.join( globals.outDir,  `page-${page.pageIndex}.png`), content )  
   }
   

@@ -1,6 +1,7 @@
 import assert from "assert";
 import { OPS, PDFImage, PDFPageProxy, Util } from "pdfjs-dist";
-import { EnhancedText, Rect, Word, Image } from "./pdf2md.model";
+import { writePageImage } from "./pdf2md.image";
+import { EnhancedText, Rect, Word, Image, Globals, Font } from "./pdf2md.model";
 
 type TransformationMatrix = [
     scalex: number,
@@ -11,6 +12,56 @@ type TransformationMatrix = [
     transformY: number]
 
 
+    type ConsoleFormat = {
+        x?:number
+        y?:number
+        width?:number
+        height?:number
+        image?:string
+        font?:string
+        text?:string
+    }
+    
+    class ConsoleOutput {
+    
+        lines = Array<ConsoleFormat>()
+    
+        private ellipsisText( text:string, maxChars:number ) {
+    
+            const regex = new RegExp( `(.{${maxChars}})..+`)
+    
+            return text.replace(regex, "$1…")
+        }
+    
+        appendRow( row:Row ) {
+    
+            if (row.containsImage) {
+                const v = row.image
+                this.lines.push( { x:v?.x, y:v?.y, width:v?.width, height:v?.height, image:v?.url||'undefined' } )
+            }
+            if (row.containsWords) {
+                const v = row.words![0]
+                const e = row.enhancedText
+                const maxw = row.words?.reduce( (result, word) => ( word.width > result ) ? word.width : result, 0 )
+                const maxh = e.reduce( (result, etext) => ( etext.height > result ) ? etext.height : result , 0 )
+                
+                const formats = e.map( (etext, i) => {
+                    const text = this.ellipsisText( etext.text, 100 )
+                    const common = { image:undefined, text:text, font:etext.font }
+                    if( i == 0 ) {
+                        return { x:v?.x, y:v?.y, width:maxw, height:maxh, ...common  }
+                    }
+                    return common
+                })
+                
+                this.lines.push( ...formats )
+                
+            }
+    
+        }
+        
+    }
+    
 
 class Row {
     y: number
@@ -29,8 +80,6 @@ class Row {
     get enhancedText() {
         assert(this.words, 'enhanceText works only for text Row!')
         const init = {
-            lastFont: '',
-            lastHeight: 0,
             lastIndex: -1,
             result: Array<EnhancedText>()
         }
@@ -56,7 +105,10 @@ class Row {
     }
 }
 
-class Rows {
+/**
+ * 
+ */
+export class Page {
     rows = Array<Row>()
 
     process(arg: Rect) {
@@ -93,49 +145,16 @@ class Rows {
         return this
     }
 
-}
-
-type ConsoleFormat = {
-    x?:number
-    y?:number
-    width?:number
-    height?:number
-    image?:string
-    font?:string
-    text?:string
-}
-
-class ConsoleOutput {
-
-    lines = Array<ConsoleFormat>()
-
-    appendRow( row:Row ) {
-
-        if (row.containsImage) {
-            const v = row.image
-            this.lines.push( { x:v?.x, y:v?.y, width:v?.width, height:v?.height, image:v?.url||'undefined' } )
-        }
-        if (row.containsWords) {
-            const v = row.words![0]
-            const e = row.enhancedText
-            const maxw = row.words?.reduce( (result, word) => result += word.width, 0 )
-            const maxh = e.reduce( (result, etext) => result += etext.height, 0 )
-            
-            const formats = e.map( (etext, i) => {
-                const text = etext.text.replace(/(.{80})..+/, "$1…")
-                const common = { image:undefined, text:text, font:etext.font }
-                if( i == 0 ) {
-                    return { x:v?.x, y:v?.y, width:maxw, height:maxh, ...common  }
-                }
-                return common
-            })
-            
-            this.lines.push( ...formats )
-            
-        }
-
+    /**
+     * 
+     */
+    consoleLog() {
+        // Debug
+        const consoleOutput = new ConsoleOutput()
+        this.rows.forEach( row => consoleOutput.appendRow(row) )
+        console.table( consoleOutput.lines )
     }
-    
+
 }
 
 function mergeItemsArray(a: Array<Rect>, b: Array<Rect>): Array<Rect> {
@@ -143,7 +162,7 @@ function mergeItemsArray(a: Array<Rect>, b: Array<Rect>): Array<Rect> {
 }
 
 // A page which holds PageItems displayable via PdfPageView
-export async function processPage(proxy: PDFPageProxy, fontMap:Map<string, FONT> ) {
+export async function processPage(proxy: PDFPageProxy, globals:Globals ) {
 
     const ops = await proxy.getOperatorList()
 
@@ -153,7 +172,7 @@ export async function processPage(proxy: PDFPageProxy, fontMap:Map<string, FONT>
 
     const images = Array<Image>()
 
-    ops.fnArray.forEach((fn, j) => {
+    ops.fnArray.forEach( async (fn, j) => {
 
         // const s = Object.entries(OPS).find( ([_,v]) => v === fn )
         // if( s ) console.log( `Operation: ${fn}: ${s[0]} at ${j}` )
@@ -165,13 +184,13 @@ export async function processPage(proxy: PDFPageProxy, fontMap:Map<string, FONT>
 
                 const fontId = args[0];
 
-                if (!fontMap.has(fontId)) {
+                if (!globals.fontMap.has(fontId)) {
 
-                    let font: FONT | null
+                    let font: Font | null
                     try {
-                        font = proxy.objs.get<FONT>(fontId)
+                        font = proxy.objs.get<Font>(fontId)
                         if (font)
-                            fontMap.set(fontId, font)
+                        globals.fontMap.set(fontId, font)
                     }
                     catch (e) {
                         console.debug(e.message)
@@ -202,21 +221,22 @@ export async function processPage(proxy: PDFPageProxy, fontMap:Map<string, FONT>
 
                 // console.log( 'image position', position )
 
-                const op = args[0];
+                const imageName = args[0];
 
-                const img = proxy.objs.get<PDFImage>(op);
+                const img = proxy.objs.get<PDFImage>(imageName);
 
                 // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
-                if (img)
-                    images.push(
-                        {
-                            y: position.y,
-                            x: position.x,
-                            width: img.width,
-                            height: img.height,
-                            url: op
-                        }
-                    )
+                if (img) {
+                    await writePageImage( img, imageName, globals )
+
+                    images.push({
+                                y: position.y,
+                                x: position.x,
+                                width: img.width,
+                                height: img.height,
+                                url: imageName
+                            })
+                }
 
                 imageMatrix = null
                 break
@@ -247,6 +267,9 @@ export async function processPage(proxy: PDFPageProxy, fontMap:Map<string, FONT>
             height: Math.round(dividedHeight <= 1 ? item.height : dividedHeight)
         }
 
+        //console.log( { text: item.str, ...textRect } )
+        globals.addTextHeight( textRect.height )
+
         return <Word>{ text: item.str, font: item.fontName, ...textRect }
 
     });
@@ -257,13 +280,10 @@ export async function processPage(proxy: PDFPageProxy, fontMap:Map<string, FONT>
         const r = b.y - a.y
         return (r === 0) ? a.x - b.x : r
     })
-    .reduce((rows, item) => rows.process(item), new Rows())
+    .reduce((rows, item) => rows.process(item), new Page())
 
-    // Debug
-    const consoleOutput = new ConsoleOutput()
-    page.rows.forEach( row => consoleOutput.appendRow(row) )
-    console.table( consoleOutput.lines )
 
+    return page
 }
 
 

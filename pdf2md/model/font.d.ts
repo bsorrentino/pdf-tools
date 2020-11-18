@@ -1,6 +1,0 @@
-
-
-type FONT = {
-    name:string
-}
-
