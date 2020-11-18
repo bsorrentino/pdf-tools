@@ -43,13 +43,13 @@ type TransformationMatrix = [
                 const v = row.words![0]
                 const e = row.enhancedText
                 const maxw = row.words?.reduce( (result, word) => ( word.width > result ) ? word.width : result, 0 )
-                const maxh = e.reduce( (result, etext) => ( etext.height > result ) ? etext.height : result , 0 )
+                //const maxh = e.reduce( (result, etext) => ( etext.height > result ) ? etext.height : result , 0 )
                 
                 const formats = e.map( (etext, i) => {
                     const text = this.ellipsisText( etext.text, 100 )
-                    const common = { image:undefined, text:text, font:etext.font }
+                    const common = { height:etext.height, image:undefined, text:text, font:etext.font }
                     if( i == 0 ) {
-                        return { x:v?.x, y:v?.y, width:maxw, height:maxh, ...common  }
+                        return { x:v?.x, y:v?.y, width:maxw, ...common  }
                     }
                     return common
                 })
@@ -191,7 +191,8 @@ export async function processPage(proxy: PDFPageProxy, globals:Globals ) {
                         globals.addFont(fontId, font)
                 }
                 catch (e) {
-                    console.debug(e.message)
+                    //console.debug(e.message)
+                    globals.addFont(fontId, { name:'' })
                 }
 
                 break;

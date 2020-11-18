@@ -64,7 +64,7 @@ export class Globals {
 
     addFont( fontId:string, font:Font ) {
 
-        assert( font, `font ${fontId} is not valied ${font}`)
+        assert( font, `font ${fontId} is not valid ${font}`)
 
         let value = this._fontMap.get( fontId ) || { ...font, occurrence: 0}   
         
@@ -77,7 +77,7 @@ export class Globals {
     getFont( fontId:string ):Font {
         return this._fontMap.get( fontId ) as Font
     }
-    
+
     addTextHeight( height:number ) {
 
         let occurrence = this._textHeights.get( height ) || 0        
@@ -100,9 +100,9 @@ export class Globals {
         return Array.from(this._textHeights.keys()).reduce( (result, h) => (h > result) ? h : result  )
     }
 
-    get textHeights() {
-        return Array.from(this._textHeights.keys()).sort( (a,b) => a - b )
-    }
+    // get textHeights() {
+    //     return Array.from(this._textHeights.keys()).sort( (a,b) => a - b )
+    // }
 
     constructor( ) {
 

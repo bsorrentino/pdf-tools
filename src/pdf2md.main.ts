@@ -60,7 +60,12 @@ async function main(pdfPath: string) {
 
     await writeFile( path.join( globals.outDir, 'out.md'), content )
 
-    console.table( globals.textHeights )
+    pages.forEach( p => p.consoleLog() )
+    console.table( [{ 
+      maxTextHeight:globals.maxTextHeight,
+      mostUsedTextHeight:globals.mostUsedTextHeight,
+      mostUsedFont:globals.mostUsedFont 
+    }] )
 
   }
   catch (reason) {
