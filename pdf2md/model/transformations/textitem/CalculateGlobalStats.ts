@@ -17,6 +17,7 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
         const fontToOccurrence:{ [key:string]:number } = {};
         let maxHeight = 0;
         let maxHeightFont:string|undefined;
+
         parseResult.pages.forEach(page => {
             page.items.forEach(item => {
                 heightToOccurrence[item.height] = heightToOccurrence[item.height] ? heightToOccurrence[item.height] + 1 : 1;
@@ -27,6 +28,7 @@ export default class CalculateGlobalStats extends ToTextItemTransformation {
                 }
             });
         });
+        
         const mostUsedHeight = parseInt(getMostUsedKey(heightToOccurrence));
         const mostUsedFont = getMostUsedKey(fontToOccurrence);
 

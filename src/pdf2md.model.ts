@@ -49,6 +49,12 @@ export class EnhancedText {
 
 type FontStat = Font & { occurrence:number }
 
+export interface Stats {
+    mostUsedFont:string // fontId
+    mostUsedTextHeight:number    
+    mostUsedTextDistanceY:number
+    maxTextHeight:number
+}
 export class Globals {
     //mostUsedFont: Font|null = null
     //maxHeightFont = 0 
@@ -58,6 +64,11 @@ export class Globals {
 
     private _fontMap = new Map<string, FontStat>()
     private _textHeights = new Map<number,number>()
+  
+    private _itemDistanceY = { 
+        lastY:-1,
+        rectMap:new Map<number,number>()
+    }
 
     outDir:string
     imageUrlPrefix:string
@@ -85,24 +96,37 @@ export class Globals {
         this._textHeights.set( height, ++occurrence )    
     
     }
+    
+    private _stats:Stats|null = null
 
-    get mostUsedFont() {
-        const [k,_] =  Array.from(this._fontMap.entries()).reduce( ( [k1,v1], [k,v] ) => (v.occurrence > v1.occurrence) ? [k,v] : [k1,v1], ['',{ occurrence:0 }] )
-        return k
+    get stats():Stats {
+  
+        if( !this._stats) {
+            const calculateMostUsedFont = () => {
+                const [k,_] =  Array.from(this._fontMap.entries()).reduce( ( [k1,v1], [k,v] ) => (v.occurrence > v1.occurrence) ? [k,v] : [k1,v1], ['',{ occurrence:0 }] )
+                return k
+            }
+    
+            const calculateMaxTextHeight = () => 
+                Array.from(this._textHeights.keys()).reduce( (result, h) => (h > result) ? h : result  )
+            
+    
+            const calculateMostUsedTextHeight = () => {
+                const [k,_] =  Array.from(this._textHeights.entries()).reduce( ( [k1,v1], [k,v] ) => (v > v1) ? [k,v] : [k1,v1], [0,-1] )
+                return k
+            }
+          
+            this._stats = {
+                maxTextHeight: calculateMaxTextHeight(),
+                mostUsedFont: calculateMostUsedFont(),
+                mostUsedTextHeight: calculateMostUsedTextHeight(),
+                mostUsedTextDistanceY:-1
+            }
+        }
+        
+        return this._stats
+  
     }
-
-    get mostUsedTextHeight() {
-        const [k,_] =  Array.from(this._textHeights.entries()).reduce( ( [k1,v1], [k,v] ) => (v > v1) ? [k,v] : [k1,v1], [0,-1] )
-        return k
-    }
-
-    get maxTextHeight() {
-        return Array.from(this._textHeights.keys()).reduce( (result, h) => (h > result) ? h : result  )
-    }
-
-    // get textHeights() {
-    //     return Array.from(this._textHeights.keys()).sort( (a,b) => a - b )
-    // }
 
     constructor( ) {
 
@@ -110,5 +134,6 @@ export class Globals {
         this.imageUrlPrefix = process.env['IMAGE_URL'] || ''
 
     }
+
 
 }

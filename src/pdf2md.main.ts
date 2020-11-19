@@ -8,7 +8,7 @@ import { getDocument } from 'pdfjs-dist'
 
 import { processPage, Page } from './pdf2md.page';
 import { loadLocalFonts } from './pdf2md.font';
-import { Globals } from './pdf2md.model';
+import { Globals, Stats } from './pdf2md.model';
 import { toMarkdown } from './pdf2md.markdown';
 
 // Some PDFs need external cmaps.
@@ -17,6 +17,16 @@ const CMAP_PACKED = true;
 
 const readFile = promisify(fs.readFile)
 const writeFile = promisify(fs.writeFile)
+
+
+/**
+ * 
+ * @param pages 
+ * @param globals 
+ */
+function calculateMostUsedTextDistanceY( pages:Array<Page>, globals:Globals ) {
+  return 0
+}
 
 /**
  * 
@@ -61,11 +71,7 @@ async function main(pdfPath: string) {
     await writeFile( path.join( globals.outDir, 'out.md'), content )
 
     pages.forEach( p => p.consoleLog() )
-    console.table( [{ 
-      maxTextHeight:globals.maxTextHeight,
-      mostUsedTextHeight:globals.mostUsedTextHeight,
-      mostUsedFont:globals.mostUsedFont 
-    }] )
+    console.table( [ globals.stats ] )
 
   }
   catch (reason) {

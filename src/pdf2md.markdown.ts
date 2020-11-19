@@ -1,5 +1,5 @@
 import { Enumify } from "enumify";
-import { Font, Globals } from "./pdf2md.model";
+import { Globals, Stats } from "./pdf2md.model";
 import { Page } from "./pdf2md.page";
 
 
