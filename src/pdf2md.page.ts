@@ -1,7 +1,7 @@
 import assert from "assert";
 import { OPS, PDFImage, PDFPageProxy, Util } from "pdfjs-dist";
 import { writePageImage } from "./pdf2md.image";
-import { EnhancedText, Rect, Word, Image, Globals, Font } from "./pdf2md.model";
+import { EnhancedWord, Rect, Word, Image, Globals, Font } from "./pdf2md.model";
 
 type TransformationMatrix = [
     scalex: number,
@@ -40,18 +40,15 @@ class ConsoleOutput {
             this.lines.push({ x: v?.x, y: v?.y, width: v?.width, height: v?.height, image: v?.url || 'undefined' })
         }
         if (row.containsWords) {
-            const v = row.words![0]
             const e = row.enhancedText
-            const maxw = row.words?.reduce((result, word) => (word.width > result) ? word.width : result, 0)
-            //const maxh = e.reduce( (result, etext) => ( etext.height > result ) ? etext.height : result , 0 )
 
             const formats = e.map((etext, i) => {
                 const text = this.ellipsisText(etext.text, 100)
                 const common = { height: etext.height, image: undefined, text: text, font: etext.font }
                 if (i == 0) {
-                    return { x: v?.x, y: v?.y, width: maxw, ...common }
+                    return {  y: etext.y, width: etext.width, x: etext.x, ...common }
                 }
-                return common
+                return { width: etext.width, x: etext.x, ...common }
             })
 
             this.lines.push(...formats)
@@ -67,7 +64,7 @@ export class Row {
     y: number
     image?: Image
     words?: Array<Word>
-    private _etextArray?:Array<EnhancedText>
+    private _etextArray?:Array<EnhancedWord>
 
     constructor(args: { y: number, words?: Array<Word>, image?: Image }) {
         this.y = args.y
@@ -76,7 +73,11 @@ export class Row {
     }
 
     addWord( w:Word ) {
-        this.words?.push(w)
+        // const trimmedText = w.text.trim()
+        // if( trimmedText.length > 0 ) {
+        //     w.text = trimmedText
+        // }
+        this.words?.push( w )
         this._updateEnhancedText()
     }
 
@@ -89,20 +90,27 @@ export class Row {
 
         const init = {
             lastIndex: -1,
-            result: Array<EnhancedText>()
+            result: Array<EnhancedWord>()
         }
 
         this._etextArray =  this.words.reduce((state, w) => {
 
             if (state.lastIndex < 0) {
-                state.result.push(new EnhancedText(w))
+                state.result.push(new EnhancedWord(w))
                 state.lastIndex = 0
             }
             else {
                 const enhancedText = state.result[state.lastIndex]
 
                 if (!enhancedText.appendWord(w)) {
-                    state.result.push(new EnhancedText(w))
+                    
+                    const filler = enhancedText.createFillerWordToRect(w, '&nbsp;')
+                    if( filler ) {
+                        state.result.push( filler )
+                        state.lastIndex++
+                    }
+
+                    state.result.push(new EnhancedWord(w))
                     state.lastIndex++
                 }
 
@@ -288,7 +296,7 @@ export async function processPage(proxy: PDFPageProxy, globals: Globals) {
         //console.log( { text: item.str, ...textRect } )
         globals.addTextHeight(textRect.height)
 
-        return new Word({ text: item.str, font: item.fontName, ...textRect })
+        return <Word>{ text: item.str, font: item.fontName, ...textRect }
 
     });
 

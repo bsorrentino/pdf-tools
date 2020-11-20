@@ -23,26 +23,10 @@ export interface Image extends Rect {
     url: string
 }
 
-type WordArg = { text: string, font: string } & Rect
-
-export class Word implements Rect {
+export interface Word extends Rect {
     text: string
     font: string
-    x: number
-    y: number
-    width: number
-    height: number
 
-    constructor( args: WordArg ) {
-        this.text = args.text
-        this.font = args.font
-        this.x = args.x
-        this.y = args.y
-        this.width = args.width
-        this.height = args.height
-    } 
-
-    get charWidth() { return Math.round( this.width / this.text.length )}
 }
 
 export interface ItemTransformer<T> {
@@ -51,25 +35,60 @@ export interface ItemTransformer<T> {
 
 type TextTransformer = ItemTransformer<string>
 
-export class EnhancedText {
+export class EnhancedWord implements Word {
+    x: number
+    y: number
+    width: number
     height: number
+    text: string
     font: string
-    private _text: string
+
     private _transformer?: TextTransformer
 
     constructor(w: Word) {
+        this.x = w.x
+        this.y = w.x
+        this.width = w.width
         this.height = w.height
+        this.text = w.text
         this.font = w.font
-        this._text = w.text
+    }
+
+    get endX() { return this.x + this.width  }
+
+    get charWidth() { return this.width / this.text.length }
+
+    createFillerWordToRect( rect:Rect, fill = ' ' ) {
+        //assert( endX < rect.x, `X coord ${rect.x} is inside this Enhanced Word` )
+        if(  this.endX < rect.x  ) {
+            
+            const witdh = rect.x - this.endX
+            
+            const numChars = Math.round(witdh / this.charWidth) 
+
+            // console.log( numChars )
+            const filler = Array(numChars).fill(fill).join('') 
+
+            return new EnhancedWord( <Word>{ x:this.endX, 
+                                             y:this.y, 
+                                             height:this.height, 
+                                             width:witdh, 
+                                             font:this.font,
+                                             text:filler 
+                                            }) 
+    
+        }
     }
 
     canAppendWord(w: Word) {
-        return (this.height === w.height && this.font === w.font)
+        return (this.height === w.height && this.font === w.font) && 
+                ( (w.x - this.endX) <= this.charWidth) 
     }
 
     appendWord(w: Word) {
         if (this.canAppendWord(w)) {
-            this._text += w.text
+            this.text += w.text
+            this.width += w.width
             return true
         }
         return false
@@ -85,11 +104,14 @@ export class EnhancedText {
         // this._transformer =  ( prev ) ?
         //     ( text:string ) => transformer(prev(text)) :
         //     transformer
+
+
     }
 
-    get text() {
-        return (this._transformer) ? this._transformer(this._text) : this._text
+    toMarkdown() {
+        return ( this._transformer ) ? this._transformer(this.text) : this.text
     }
+
 }
 
 

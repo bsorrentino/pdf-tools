@@ -1,7 +1,7 @@
 import assert = require('assert')
 
 import { Enumify } from "enumify";
-import { EnhancedText, Globals, ItemTransformer, Stats } from "./pdf2md.model";
+import { EnhancedWord, Globals, ItemTransformer, Stats } from "./pdf2md.model";
 import { Page, Row } from "./pdf2md.page";
 
 
@@ -183,7 +183,7 @@ export function toMarkdown(page: Page, globals: Globals) {
             detectHeaders(row, globals )         
             detectFonts( row, globals )
 
-            result = result.concat(row.enhancedText.reduce((out, etext) => out.concat(etext.text), ''))
+            result = result.concat(row.enhancedText.reduce((out, etext) => out.concat(etext.toMarkdown()), ''))
 
         }
 
