@@ -1,4 +1,13 @@
+# Mac
+.DS_Store
+
+# Node
 node_modules/
+
+# parcel
 bin/
-out/
 .cache/
+
+# custom 
+out/
+private/
