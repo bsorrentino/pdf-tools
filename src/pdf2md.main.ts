@@ -21,15 +21,6 @@ const writeFile = promisify(fs.writeFile)
 
 /**
  * 
- * @param pages 
- * @param globals 
- */
-function calculateMostUsedTextDistanceY( pages:Array<Page>, globals:Globals ) {
-  return 0
-}
-
-/**
- * 
  * @param pdfPath 
  */
 async function main(pdfPath: string) {
@@ -71,7 +62,7 @@ async function main(pdfPath: string) {
     await writeFile( path.join( globals.outDir, 'out.md'), content )
 
     pages.forEach( p => p.consoleLog() )
-    console.table( [ globals.stats ] )
+    console.table( [ globals.stats ] ); console.log( globals.stats.textHeigths)
 
   }
   catch (reason) {
@@ -83,6 +74,7 @@ async function main(pdfPath: string) {
 // STARTUP CODE
 
 
-const pdfPath = process.argv[2] || "guidelines.pdf";
+//const pdfPath = process.argv[2] || "guidelines.pdf";
+const pdfPath = process.argv[2] || "document1.pdf";
 
 main(pdfPath).then( () => {} )

@@ -1,4 +1,4 @@
-import { assert } from 'console'
+import assert = require('assert')
 import path from 'path'
 
 export interface Font {
@@ -22,15 +22,18 @@ export interface Word extends Rect {
     font: string
 }
 
+type TextTransformer = ( text:string ) => string
+
 export class EnhancedText {
     height: number
     font: string
-    text: string
+    private _text: string
+    private _transformer?: TextTransformer
 
     constructor(w: Word) {
         this.height = w.height
         this.font = w.font
-        this.text = w.text
+        this._text = w.text
     }
 
     canAppendWord(w: Word) {
@@ -39,10 +42,23 @@ export class EnhancedText {
 
     appendWord(w: Word) {
         if (this.canAppendWord(w)) {
-            this.text += w.text
+            this._text += w.text
             return true
         }
         return false
+    }
+
+    addTransformer( transformer:TextTransformer ) {
+
+        const prev = this._transformer
+
+        this._transformer =  ( prev ) ?
+            ( text:string ) => transformer(prev(text)) :
+            transformer
+    }
+
+    get text() {
+        return ( this._transformer ) ? this._transformer( this._text ) : this._text
     }
 }
 
@@ -54,6 +70,7 @@ export interface Stats {
     mostUsedTextHeight:number    
     mostUsedTextDistanceY:number
     maxTextHeight:number
+    textHeigths:Array<number>
 }
 export class Globals {
     //mostUsedFont: Font|null = null
@@ -96,7 +113,7 @@ export class Globals {
         this._textHeights.set( height, ++occurrence )    
     
     }
-    
+
     private _stats:Stats|null = null
 
     get stats():Stats {
@@ -120,7 +137,8 @@ export class Globals {
                 maxTextHeight: calculateMaxTextHeight(),
                 mostUsedFont: calculateMostUsedFont(),
                 mostUsedTextHeight: calculateMostUsedTextHeight(),
-                mostUsedTextDistanceY:-1
+                textHeigths:Array.from(this._textHeights.keys()).sort( (a,b) => b - a ),
+                mostUsedTextDistanceY:-1,
             }
         }
         

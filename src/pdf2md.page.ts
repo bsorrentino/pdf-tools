@@ -12,61 +12,62 @@ type TransformationMatrix = [
     transformY: number]
 
 
-    type ConsoleFormat = {
-        x?:number
-        y?:number
-        width?:number
-        height?:number
-        image?:string
-        font?:string
-        text?:string
-    }
-    
-    class ConsoleOutput {
-    
-        lines = Array<ConsoleFormat>()
-    
-        private ellipsisText( text:string, maxChars:number ) {
-    
-            const regex = new RegExp( `(.{${maxChars}})..+`)
-    
-            return text.replace(regex, "$1…")
-        }
-    
-        appendRow( row:Row ) {
-    
-            if (row.containsImage) {
-                const v = row.image
-                this.lines.push( { x:v?.x, y:v?.y, width:v?.width, height:v?.height, image:v?.url||'undefined' } )
-            }
-            if (row.containsWords) {
-                const v = row.words![0]
-                const e = row.enhancedText
-                const maxw = row.words?.reduce( (result, word) => ( word.width > result ) ? word.width : result, 0 )
-                //const maxh = e.reduce( (result, etext) => ( etext.height > result ) ? etext.height : result , 0 )
-                
-                const formats = e.map( (etext, i) => {
-                    const text = this.ellipsisText( etext.text, 100 )
-                    const common = { height:etext.height, image:undefined, text:text, font:etext.font }
-                    if( i == 0 ) {
-                        return { x:v?.x, y:v?.y, width:maxw, ...common  }
-                    }
-                    return common
-                })
-                
-                this.lines.push( ...formats )
-                
-            }
-    
-        }
-        
-    }
-    
+type ConsoleFormat = {
+    x?: number
+    y?: number
+    width?: number
+    height?: number
+    image?: string
+    font?: string
+    text?: string
+}
 
-class Row {
+class ConsoleOutput {
+
+    lines = Array<ConsoleFormat>()
+
+    private ellipsisText(text: string, maxChars: number) {
+
+        const regex = new RegExp(`(.{${maxChars}})..+`)
+
+        return text.replace(regex, "$1…")
+    }
+
+    appendRow(row: Row) {
+
+        if (row.containsImage) {
+            const v = row.image
+            this.lines.push({ x: v?.x, y: v?.y, width: v?.width, height: v?.height, image: v?.url || 'undefined' })
+        }
+        if (row.containsWords) {
+            const v = row.words![0]
+            const e = row.enhancedText
+            const maxw = row.words?.reduce((result, word) => (word.width > result) ? word.width : result, 0)
+            //const maxh = e.reduce( (result, etext) => ( etext.height > result ) ? etext.height : result , 0 )
+
+            const formats = e.map((etext, i) => {
+                const text = this.ellipsisText(etext.text, 100)
+                const common = { height: etext.height, image: undefined, text: text, font: etext.font }
+                if (i == 0) {
+                    return { x: v?.x, y: v?.y, width: maxw, ...common }
+                }
+                return common
+            })
+
+            this.lines.push(...formats)
+
+        }
+
+    }
+
+}
+
+
+export class Row {
     y: number
     image?: Image
     words?: Array<Word>
+    private _etextArray?:Array<EnhancedText>
 
     constructor(args: { y: number, words?: Array<Word>, image?: Image }) {
         this.y = args.y
@@ -74,17 +75,24 @@ class Row {
         this.image = args.image
     }
 
+    addWord( w:Word ) {
+        this.words?.push(w)
+        this._updateEnhancedText()
+    }
+
     get containsImage() { return this.image !== undefined }
     get containsWords() { return this.words !== undefined }
 
-    get enhancedText() {
-        assert(this.words, 'enhanceText works only for text Row!')
+    private _updateEnhancedText() {  
+        if( this._etextArray ) return // GUARD 
+        if( !this.words || this.words.length == 0) return // GUARD
+
         const init = {
             lastIndex: -1,
             result: Array<EnhancedText>()
         }
 
-        return this.words?.reduce((state, w) => {
+        this._etextArray =  this.words.reduce((state, w) => {
 
             if (state.lastIndex < 0) {
                 state.result.push(new EnhancedText(w))
@@ -102,6 +110,17 @@ class Row {
             return state
 
         }, init).result
+    }
+ 
+    get enhancedText() { 
+        this._updateEnhancedText()        
+        return this._etextArray! 
+    }
+
+    containsTextWithHeight( height:number ) {
+        this._updateEnhancedText()
+        assert(this._etextArray, 'text array is undefined!')
+        return this._etextArray.findIndex( etext => etext.height == height ) >= 0
     }
 }
 
@@ -123,8 +142,9 @@ export class Page {
 
     private processImage(img: Image) {
         let si = this.rows.findIndex(s => s.y == img.y)
-        assert(si < 0, `row ${si} already exists! `)
-        this.rows.push(new Row({ y: img.y, image: img }))
+        //assert(si < 0, `row ${si} already exists! it is not possible add an image`)
+        if (si < 0)
+            this.rows.push(new Row({ y: img.y, image: img }))
     }
 
     private processWord(w: Word) {
@@ -151,8 +171,8 @@ export class Page {
     consoleLog() {
         // Debug
         const consoleOutput = new ConsoleOutput()
-        this.rows.forEach( row => consoleOutput.appendRow(row) )
-        console.table( consoleOutput.lines )
+        this.rows.forEach(row => consoleOutput.appendRow(row))
+        console.table(consoleOutput.lines)
     }
 
 }
@@ -162,7 +182,7 @@ function mergeItemsArray(a: Array<Rect>, b: Array<Rect>): Array<Rect> {
 }
 
 // A page which holds PageItems displayable via PdfPageView
-export async function processPage(proxy: PDFPageProxy, globals:Globals ) {
+export async function processPage(proxy: PDFPageProxy, globals: Globals) {
 
     const ops = await proxy.getOperatorList()
 
@@ -172,7 +192,7 @@ export async function processPage(proxy: PDFPageProxy, globals:Globals ) {
 
     const images = Array<Image>()
 
-    ops.fnArray.forEach( async (fn, j) => {
+    ops.fnArray.forEach(async (fn, j) => {
 
         // const s = Object.entries(OPS).find( ([_,v]) => v === fn )
         // if( s ) console.log( `Operation: ${fn}: ${s[0]} at ${j}` )
@@ -192,7 +212,7 @@ export async function processPage(proxy: PDFPageProxy, globals:Globals ) {
                 }
                 catch (e) {
                     //console.debug(e.message)
-                    globals.addFont(fontId, { name:'' })
+                    globals.addFont(fontId, { name: '' })
                 }
 
                 break;
@@ -225,15 +245,15 @@ export async function processPage(proxy: PDFPageProxy, globals:Globals ) {
 
                 // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
                 if (img) {
-                    await writePageImage( img, imageName, globals )
+                    await writePageImage(img, imageName, globals)
 
                     images.push({
-                                y: position.y,
-                                x: position.x,
-                                width: img.width,
-                                height: img.height,
-                                url: imageName
-                            })
+                        y: position.y,
+                        x: position.x,
+                        width: img.width,
+                        height: img.height,
+                        url: imageName
+                    })
                 }
 
                 imageMatrix = null
@@ -266,7 +286,7 @@ export async function processPage(proxy: PDFPageProxy, globals:Globals ) {
         }
 
         //console.log( { text: item.str, ...textRect } )
-        globals.addTextHeight( textRect.height )
+        globals.addTextHeight(textRect.height)
 
         return <Word>{ text: item.str, font: item.fontName, ...textRect }
 
@@ -278,7 +298,7 @@ export async function processPage(proxy: PDFPageProxy, globals:Globals ) {
         const r = b.y - a.y
         return (r === 0) ? a.x - b.x : r
     })
-    .reduce((rows, item) => rows.process(item), new Page())
+        .reduce((rows, item) => rows.process(item), new Page())
 
 
     return page
