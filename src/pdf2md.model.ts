@@ -1,8 +1,9 @@
 import assert = require('assert')
 import path from 'path'
+import { loadLocalFonts } from './pdf2md.font'
 
 export interface Font {
-    name:string
+    name:string|null
 }
 
 
@@ -22,7 +23,11 @@ export interface Word extends Rect {
     font: string
 }
 
-type TextTransformer = ( text:string ) => string
+export interface ItemTransformer<T> {
+    ( value:T ):T
+}
+
+type TextTransformer =  ItemTransformer<string>
 
 export class EnhancedText {
     height: number
@@ -49,12 +54,15 @@ export class EnhancedText {
     }
 
     addTransformer( transformer:TextTransformer ) {
+        if( this._transformer ) return false
 
-        const prev = this._transformer
+        this._transformer = transformer
+        
+        // const prev = this._transformer
 
-        this._transformer =  ( prev ) ?
-            ( text:string ) => transformer(prev(text)) :
-            transformer
+        // this._transformer =  ( prev ) ?
+        //     ( text:string ) => transformer(prev(text)) :
+        //     transformer
     }
 
     get text() {
@@ -70,8 +78,10 @@ export interface Stats {
     mostUsedTextHeight:number    
     mostUsedTextDistanceY:number
     maxTextHeight:number
+    maxHeightFont:string|null
     textHeigths:Array<number>
 }
+
 export class Globals {
     //mostUsedFont: Font|null = null
     //maxHeightFont = 0 
@@ -82,14 +92,14 @@ export class Globals {
     private _fontMap = new Map<string, FontStat>()
     private _textHeights = new Map<number,number>()
   
-    private _itemDistanceY = { 
-        lastY:-1,
-        rectMap:new Map<number,number>()
-    }
-
     outDir:string
     imageUrlPrefix:string
 
+    /**
+     * 
+     * @param fontId 
+     * @param font 
+     */
     addFont( fontId:string, font:Font ) {
 
         assert( font, `font ${fontId} is not valid ${font}`)
@@ -102,10 +112,18 @@ export class Globals {
 
     }
 
-    getFont( fontId:string ):Font {
+    /**
+     * 
+     * @param fontId 
+     */
+    getFont( fontId:string ):Font|undefined {
         return this._fontMap.get( fontId ) as Font
     }
 
+    /**
+     * 
+     * @param height 
+     */
     addTextHeight( height:number ) {
 
         let occurrence = this._textHeights.get( height ) || 0        
@@ -116,6 +134,9 @@ export class Globals {
 
     private _stats:Stats|null = null
 
+    /**
+     * 
+     */
     get stats():Stats {
   
         if( !this._stats) {
@@ -135,6 +156,7 @@ export class Globals {
           
             this._stats = {
                 maxTextHeight: calculateMaxTextHeight(),
+                maxHeightFont:null,
                 mostUsedFont: calculateMostUsedFont(),
                 mostUsedTextHeight: calculateMostUsedTextHeight(),
                 textHeigths:Array.from(this._textHeights.keys()).sort( (a,b) => b - a ),
@@ -147,10 +169,8 @@ export class Globals {
     }
 
     constructor( ) {
-
         this.outDir = path.join( process.cwd(), 'out' )
         this.imageUrlPrefix = process.env['IMAGE_URL'] || ''
-
     }
 
 

@@ -7,9 +7,9 @@ import { promisify } from 'util'
 import { getDocument } from 'pdfjs-dist'
 
 import { processPage, Page } from './pdf2md.page';
-import { loadLocalFonts } from './pdf2md.font';
-import { Globals, Stats } from './pdf2md.model';
+import { Globals } from './pdf2md.model';
 import { toMarkdown } from './pdf2md.markdown';
+import { loadLocalFonts } from './pdf2md.font';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -29,9 +29,10 @@ async function main(pdfPath: string) {
 
     const globals = new Globals()
 
+    loadLocalFonts( globals )
     
     const data = new Uint8Array(await readFile(pdfPath))
-
+ 
     const pdfDocument = await getDocument({
       data: data,
       cMapUrl: CMAP_URL,
@@ -75,6 +76,6 @@ async function main(pdfPath: string) {
 
 
 //const pdfPath = process.argv[2] || "guidelines.pdf";
-const pdfPath = process.argv[2] || path.join( 'private', 'document1.pdf')
+const pdfPath = process.argv[2] || path.join('/Users/softphone/Documents/My Personal/US DEPARTMENT OF STATE', 'DomandaViaggioSenzaVisto.pdf')
 
 main(pdfPath).then( () => {} )

@@ -1,14 +1,14 @@
 import assert = require('assert')
 
 import { Enumify } from "enumify";
-import { EnhancedText, Globals, Stats } from "./pdf2md.model";
+import { EnhancedText, Globals, ItemTransformer, Stats } from "./pdf2md.model";
 import { Page, Row } from "./pdf2md.page";
 
 
-type ToText = (text: string) => string
+type ToText = ItemTransformer<string>
 
 // An Markdown block
-export default class BlockType extends Enumify {
+class BlockType extends Enumify {
 
     toText: ToText
 
@@ -80,6 +80,16 @@ export function isHeadline(type: BlockType) {
     return type && type.enumKey.length == 2 && type.enumKey[0] === 'H'
 }
 
+export default class WordFormat extends Enumify {
+
+    constructor( public toText:ToText ) { super() }
+
+    static BOLD             = new WordFormat( ( text ) => `**${text}**` )
+    static OBLIQUE          = new WordFormat( ( text ) => `_${text}_` )
+    static BOLD_OBLIQUE     = new WordFormat( ( text ) => `**_${text}_**` )
+    static _ = WordFormat.closeEnum()
+}
+
 // export function blockToText(block: LineItemBlock) {
 //     if (!block.type) {
 //         return linesToText(block.items, false);
@@ -107,7 +117,7 @@ function blockTypeByLevel(level: number):BlockType {
  */
 function detectHeaders(row: Row, globals: Globals) {
 
-    if (row.containsWords && row.enhancedText.length == 1) {
+    if (row.enhancedText.length == 1) {
 
         const mostUsedHeight = globals.stats.mostUsedTextHeight
 
@@ -127,24 +137,34 @@ function detectHeaders(row: Row, globals: Globals) {
 
 }
 
-function processFont(fontId: string, globals: Globals) {
+function detectFonts(row: Row, globals: Globals) {
 
-    /*    
-        const isBold = () => fontName.includes('bold')
-        const isItalic = () => fontName.includes('oblique') || fontName.includes('italic')
-    
-        if (key == mostUsedFont) {
-            format = null;
-        } else if (isBold() && isItalic() ) {
-            format = WordFormat.BOLD_OBLIQUE;               
-        } else if (isBold()) {
-            format = WordFormat.BOLD;
-        } else if ( isItalic() ) {
-            format = WordFormat.OBLIQUE;
-        } else if (fontName === maxHeightFont) {
-            format = WordFormat.BOLD;
-        } 
-    */
+    row.enhancedText.forEach( etext => {
+
+        const fontId    = etext.font
+        const font      = globals.getFont( fontId )
+
+        if (font && font.name != null && fontId != globals.stats.mostUsedFont) {
+
+            const fontName = font.name.toLowerCase()
+            
+            console.log( `font['${fontId}']=${fontName}` )
+
+            const isBold = () => fontName.includes('bold')
+            const isItalic = () => fontName.includes('oblique') || fontName.includes('italic')
+            
+            if (isBold() && isItalic() ) {
+                etext.addTransformer( WordFormat.BOLD_OBLIQUE.toText )              
+            } else if (isBold()) {
+                etext.addTransformer( WordFormat.BOLD.toText )
+            } else if ( isItalic() ) {
+                etext.addTransformer( WordFormat.OBLIQUE.toText );
+            } else if (fontName === globals.stats.maxHeightFont) {
+                etext.addTransformer( WordFormat.BOLD_OBLIQUE.toText )
+            } 
+        }
+
+    })
 }
 
 export function toMarkdown(page: Page, globals: Globals) {
@@ -160,10 +180,10 @@ export function toMarkdown(page: Page, globals: Globals) {
         }
         if (row.containsWords) {
 
-            detectHeaders(row, globals )
+            detectHeaders(row, globals )         
+            detectFonts( row, globals )
 
             result = result.concat(row.enhancedText.reduce((out, etext) => out.concat(etext.text), ''))
-
 
         }
 

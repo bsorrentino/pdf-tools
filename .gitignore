@@ -11,3 +11,4 @@ bin/
 # custom 
 out/
 private/
+tmp/
