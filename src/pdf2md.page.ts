@@ -288,7 +288,7 @@ export async function processPage(proxy: PDFPageProxy, globals: Globals) {
         //console.log( { text: item.str, ...textRect } )
         globals.addTextHeight(textRect.height)
 
-        return <Word>{ text: item.str, font: item.fontName, ...textRect }
+        return new Word({ text: item.str, font: item.fontName, ...textRect })
 
     });
 

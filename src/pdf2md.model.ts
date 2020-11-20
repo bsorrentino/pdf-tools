@@ -23,9 +23,26 @@ export interface Image extends Rect {
     url: string
 }
 
-export interface Word extends Rect {
+type WordArg = { text: string, font: string } & Rect
+
+export class Word implements Rect {
     text: string
     font: string
+    x: number
+    y: number
+    width: number
+    height: number
+
+    constructor( args: WordArg ) {
+        this.text = args.text
+        this.font = args.font
+        this.x = args.x
+        this.y = args.y
+        this.width = args.width
+        this.height = args.height
+    } 
+
+    get charWidth() { return Math.round( this.width / this.text.length )}
 }
 
 export interface ItemTransformer<T> {
