@@ -9,7 +9,6 @@ import { getDocument } from 'pdfjs-dist'
 import { processPage, Page } from './pdf2md.page';
 import { Globals } from './pdf2md.model';
 import { toMarkdown } from './pdf2md.markdown';
-import { loadLocalFonts } from './pdf2md.font';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -27,9 +26,11 @@ async function main(pdfPath: string) {
 
   try {
 
+    const fontFile = path.join('tmp', 'fonts.json')
+
     const globals = new Globals()
 
-    loadLocalFonts( globals )
+    globals.loadLocalFonts( fontFile )
     
     const data = new Uint8Array(await readFile(pdfPath))
  
@@ -62,6 +63,8 @@ async function main(pdfPath: string) {
 
     await writeFile( path.join( globals.outDir, 'out.md'), content )
 
+    globals.saveFonts( fontFile )
+
     pages.forEach( p => p.consoleLog() )
     console.table( [ globals.stats ] ); console.log( globals.stats.textHeigths)
 
@@ -76,6 +79,7 @@ async function main(pdfPath: string) {
 
 
 //const pdfPath = process.argv[2] || "guidelines.pdf";
-const pdfPath = process.argv[2] || path.join('/Users/softphone/Documents/My Personal/US DEPARTMENT OF STATE', 'DomandaViaggioSenzaVisto.pdf')
+// const pdfPath = process.argv[2] || path.join('/Users/softphone/Documents/My Personal/US DEPARTMENT OF STATE', 'DomandaViaggioSenzaVisto.pdf')
+const pdfPath = process.argv[2] || path.join('private', 'document1.pdf')
 
 main(pdfPath).then( () => {} )

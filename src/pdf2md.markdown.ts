@@ -148,7 +148,7 @@ function detectFonts(row: Row, globals: Globals) {
 
             const fontName = font.name.toLowerCase()
             
-            console.log( `font['${fontId}']=${fontName}` )
+            //console.log( `font['${fontId}']=${fontName}` )
 
             const isBold = () => fontName.includes('bold')
             const isItalic = () => fontName.includes('oblique') || fontName.includes('italic')
