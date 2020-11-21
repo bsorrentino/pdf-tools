@@ -36,9 +36,19 @@ class ConsoleOutput {
 
     appendRow(row: Row) {
 
-        if (row.containsImage) {
-            const v = row.image
-            this.lines.push({ y: v?.y, width: v?.width, x: v?.x,  height: v?.height, image: v?.url || 'undefined' })
+        if (row.containsImages) {
+            
+            const v = row.images?.map( (img, i) => {
+
+                this.lines.push({ 
+                    y: img?.y, 
+                    width: img?.width, 
+                    x: img?.x,  
+                    height: img?.height, 
+                    image: img?.url || 'undefined' 
+                })
+
+            })
         }
         if (row.containsWords) {
             const e = row.enhancedText
@@ -64,25 +74,30 @@ class ConsoleOutput {
 
 export class Row {
     y: number
-    image?: Image
+    private _images?: Array<Image>
     private _words?: Array<Word>
     private _etextArray?:Array<EnhancedWord>
 
-    constructor(args: { y: number, words?: Array<Word>, image?: Image }) {
+    constructor(args: { y: number , words?: Array<Word>, images?: Array<Image> }) {
         this.y = args.y
         this._words = args.words
-        this.image = args.image
+        this._images = args.images
 
         this._updateEnhancedText()
     }
+
+    get containsWords() { return this._words !== undefined }
 
     addWord( w:Word ) {
         this._words?.push( w )
         this._updateEnhancedText()
     }
 
-    get containsImage() { return this.image !== undefined }
-    get containsWords() { return this._words !== undefined }
+    get containsImages() { return this._images !== undefined }
+
+    addImage( img:Image ) {
+        this._images?.push( img )
+    }
 
     private _updateEnhancedText() {  
         if( !this._words || this._words.length == 0) return // GUARD
@@ -119,6 +134,8 @@ export class Row {
         return this._etextArray! 
     }
 
+    get images() { return this._images }
+
     containsTextWithHeight( height:number ) {
         //this._updateEnhancedText()
         assert(this._etextArray, 'text array is undefined!')
@@ -145,8 +162,16 @@ export class Page {
     private processImage(img: Image) {
         let si = this.rows.findIndex(row => row.y == img.y)
         //assert(si < 0, `row ${si} already exists! it is not possible add an image`)
-        if (si < 0)
-            this.rows.push(new Row({ y: img.y, image: img }))
+        let row: Row
+        if (si < 0) {
+            row = new Row({ y: img.y, images: Array<Image>() })
+            this.rows.push(row)
+        }
+        else {
+            row = this.rows[si]
+        }
+        row.addImage(img)
+        return this
     }
 
     private processWord(w: Word) {
