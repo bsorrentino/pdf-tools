@@ -1,7 +1,8 @@
 import assert = require('assert')
 
 import { Enumify } from "enumify";
-import { EnhancedWord, Globals, ItemTransformer, Stats } from "./pdf2md.model";
+import { globals } from './pdf2md.global';
+import { ItemTransformer } from "./pdf2md.model";
 import { Page, Row } from "./pdf2md.page";
 
 
@@ -115,7 +116,7 @@ function blockTypeByLevel(level: number):BlockType {
  * @param row 
  * @param globals 
  */
-function detectHeaders(row: Row, globals: Globals) {
+function detectHeaders(row: Row) {
 
     if (row.enhancedText.length == 1) {
 
@@ -137,7 +138,7 @@ function detectHeaders(row: Row, globals: Globals) {
 
 }
 
-function detectFonts(row: Row, globals: Globals) {
+function detectFonts(row: Row ) {
 
     row.enhancedText.forEach( etext => {
 
@@ -167,7 +168,7 @@ function detectFonts(row: Row, globals: Globals) {
     })
 }
 
-export function toMarkdown(page: Page, globals: Globals) {
+export function toMarkdown(page: Page ) {
     //const pageContainsMaxHeight = page.rows.filter(row => row.containsWords).findIndex(row => row.containsTextWithHeight(globals.stats.maxTextHeight)) >= 0
 
     const init = ''
@@ -180,8 +181,8 @@ export function toMarkdown(page: Page, globals: Globals) {
         }
         if (row.containsWords) {
 
-            detectHeaders(row, globals )         
-            detectFonts( row, globals )
+            detectHeaders(row )         
+            detectFonts( row )
 
             result = result.concat(row.enhancedText.reduce((out, etext) => out.concat(etext.toMarkdown()), ''))
 

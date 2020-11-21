@@ -1,7 +1,8 @@
 import assert from "assert";
 import { OPS, PDFImage, PDFPageProxy, Util } from "pdfjs-dist";
+import { globals } from "./pdf2md.global";
 import { writePageImage } from "./pdf2md.image";
-import { EnhancedWord, Rect, Word, Image, Globals, Font } from "./pdf2md.model";
+import { EnhancedWord, Rect, Word, Image, Font } from "./pdf2md.model";
 
 type TransformationMatrix = [
     scalex: number,
@@ -132,7 +133,6 @@ export class Page {
     rows = Array<Row>()
 
     process(arg: Rect) {
-        console.log( arg.y )
         if ('text' in arg) {
             this.processWord(arg as Word)
         }
@@ -184,7 +184,7 @@ function mergeItemsArray(a: Array<Rect>, b: Array<Rect>): Array<Rect> {
 }
 
 // A page which holds PageItems displayable via PdfPageView
-export async function processPage(proxy: PDFPageProxy, globals: Globals) {
+export async function processPage(proxy: PDFPageProxy) {
 
     const ops = await proxy.getOperatorList()
 

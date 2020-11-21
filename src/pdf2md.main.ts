@@ -7,8 +7,8 @@ import { promisify } from 'util'
 import { getDocument } from 'pdfjs-dist'
 
 import { processPage, Page } from './pdf2md.page';
-import { Globals } from './pdf2md.model';
 import { toMarkdown } from './pdf2md.markdown';
+import { globals } from './pdf2md.global';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -26,9 +26,7 @@ async function main(pdfPath: string) {
 
   try {
 
-    const fontFile = path.join('tmp', 'fonts.json')
-
-    const globals = new Globals()
+    const fontFile = path.join('tmp', `${path.basename(pdfPath, '.pdf')}.fonts.json`)
 
     globals.loadLocalFonts( fontFile )
     
@@ -52,13 +50,13 @@ async function main(pdfPath: string) {
       // Get the first page.
       const pdfPage = await pdfDocument.getPage(i)
 
-      const page = await processPage( pdfPage , globals )
+      const page = await processPage( pdfPage )
 
       pages.push( page )
 
     }
 
-    const content = pages.map( page => toMarkdown( page, globals ) )
+    const content = pages.map( page => toMarkdown( page ) )
                           .reduce( (result, pageText ) => result.concat(pageText), '')
 
     await writeFile( path.join( globals.outDir, 'out.md'), content )
@@ -79,7 +77,7 @@ async function main(pdfPath: string) {
 
 
 //const pdfPath = process.argv[2] || "guidelines.pdf";
-// const pdfPath = process.argv[2] || path.join('/Users/softphone/Documents/My Personal/US DEPARTMENT OF STATE', 'DomandaViaggioSenzaVisto.pdf')
-const pdfPath = process.argv[2] || path.join('private', 'document1.pdf')
+//const pdfPath = process.argv[2] || path.join('private', 'document1.pdf')
+const pdfPath = process.argv[2] || path.join('private', 'document2.pdf')
 
 main(pdfPath).then( () => {} )
