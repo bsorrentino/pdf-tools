@@ -5,7 +5,6 @@ export interface Font {
     name: string | null
 }
 
-
 export interface Rect {
     x: number
     y: number

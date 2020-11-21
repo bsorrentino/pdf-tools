@@ -76,8 +76,8 @@ async function main(pdfPath: string) {
 // STARTUP CODE
 
 
-//const pdfPath = process.argv[2] || "guidelines.pdf";
-//const pdfPath = process.argv[2] || path.join('private', 'document1.pdf')
-const pdfPath = process.argv[2] || path.join('private', 'document2.pdf')
+const pdfPath = process.argv[2] || "guidelines.pdf";
+// const pdfPath = process.argv[2] || path.join('private', 'document1.pdf')
+// const pdfPath = process.argv[2] || path.join('private', 'document2.pdf')
 
 main(pdfPath).then( () => {} )

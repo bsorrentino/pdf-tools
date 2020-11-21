@@ -85,9 +85,17 @@ export default class WordFormat extends Enumify {
 
     constructor( public toText:ToText ) { super() }
 
-    static BOLD             = new WordFormat( ( text ) => `**${text}**` )
+    static BOLD             = new WordFormat( ( text ) => { 
+        const rx = /^(.+[^\s])(\s*)$/.exec(text)
+        console.log( text, rx )
+        return ( rx ) ? `**${rx[1]}**${rx[2]}` : 'null'
+    })
     static OBLIQUE          = new WordFormat( ( text ) => `_${text}_` )
-    static BOLD_OBLIQUE     = new WordFormat( ( text ) => `**_${text}_**` )
+    static BOLD_OBLIQUE     = new WordFormat( ( text ) => {
+        const rx = /^(.+)(\s*)$/.exec(text)
+        return ( rx ) ? `**_${rx[1]}_**${rx[2]}` : 'null'
+    })
+    static MONOSPACE        = new WordFormat( ( text ) => `\`${text}\`` )
     static _ = WordFormat.closeEnum()
 }
 
@@ -153,6 +161,7 @@ function detectFonts(row: Row ) {
 
             const isBold = () => fontName.includes('bold')
             const isItalic = () => fontName.includes('oblique') || fontName.includes('italic')
+            const isCode = () => fontName.includes('monospace') || fontName.includes('code')
             
             if (isBold() && isItalic() ) {
                 etext.addTransformer( WordFormat.BOLD_OBLIQUE.toText )              
@@ -160,6 +169,8 @@ function detectFonts(row: Row ) {
                 etext.addTransformer( WordFormat.BOLD.toText )
             } else if ( isItalic() ) {
                 etext.addTransformer( WordFormat.OBLIQUE.toText );
+            } else if (isCode()) {
+                etext.addTransformer( WordFormat.MONOSPACE.toText )
             } else if (fontName === globals.stats.maxHeightFont) {
                 etext.addTransformer( WordFormat.BOLD_OBLIQUE.toText )
             } 
@@ -175,20 +186,23 @@ export function toMarkdown(page: Page ) {
 
     return page.rows.reduce((result, row, i) => {
 
-        if (row.containsImage) {
-            const url = row.image?.url
-            result = result.concat(`![${url}](${globals.imageUrlPrefix}${url}.png "")`)
+        let md = ''
+        if ( row.images ) {
+         
+            md = row.images.reduce ( (out, img) => 
+                    out.concat(`![${img.url}](${globals.imageUrlPrefix}${img.url}.png "")`) , '') 
+
         }
         if (row.containsWords) {
 
             detectHeaders(row )         
             detectFonts( row )
 
-            result = result.concat(row.enhancedText.reduce((out, etext) => out.concat(etext.toMarkdown()), ''))
+            md = row.enhancedText.reduce((out, etext) => out.concat(etext.toMarkdown()), '')
 
         }
 
-        return result.concat('\n')
+        return result.concat(md).concat('\n')
 
     }, init)
 
