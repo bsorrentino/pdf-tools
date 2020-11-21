@@ -71,6 +71,8 @@ export class Row {
         this.y = args.y
         this._words = args.words
         this.image = args.image
+
+        this._updateEnhancedText()
     }
 
     addWord( w:Word ) {
@@ -83,25 +85,24 @@ export class Row {
 
     private _updateEnhancedText() {  
         if( !this._words || this._words.length == 0) return // GUARD
-
+        
         const init = {
             lastIndex: -1,
             result: Array<EnhancedWord>()
         }
 
-        this._etextArray =  this._words.reduce((state, w /*, index, words*/) => {
+        this._etextArray =  this._words.reduce((state, w, index, words ) => {
 
             if (state.lastIndex < 0) {
                 state.result.push(new EnhancedWord(w))
                 state.lastIndex = 0
             }
             else {
-                //const isLastWord = index === words.length-1 
-                //const isTextBlank = w.text.trim().length === 0
+                const isLastWord = index === words.length-1 
 
                 const enhancedText = state.result[state.lastIndex]
 
-                if (!enhancedText.appendWord(w)) {
+                if (!enhancedText.appendWord(w, isLastWord)) {
                     state.result.push(new EnhancedWord(w))
                     state.lastIndex++    
                 }
@@ -113,12 +114,12 @@ export class Row {
     }
  
     get enhancedText() { 
-        this._updateEnhancedText()        
+        //this._updateEnhancedText()        
         return this._etextArray! 
     }
 
     containsTextWithHeight( height:number ) {
-        this._updateEnhancedText()
+        //this._updateEnhancedText()
         assert(this._etextArray, 'text array is undefined!')
         return this._etextArray.findIndex( etext => etext.height == height ) >= 0
     }
@@ -131,6 +132,7 @@ export class Page {
     rows = Array<Row>()
 
     process(arg: Rect) {
+        console.log( arg.y )
         if ('text' in arg) {
             this.processWord(arg as Word)
         }
@@ -141,14 +143,14 @@ export class Page {
     }
 
     private processImage(img: Image) {
-        let si = this.rows.findIndex(s => s.y == img.y)
+        let si = this.rows.findIndex(row => row.y == img.y)
         //assert(si < 0, `row ${si} already exists! it is not possible add an image`)
         if (si < 0)
             this.rows.push(new Row({ y: img.y, image: img }))
     }
 
     private processWord(w: Word) {
-        let si = this.rows.findIndex(s => s.y == w.y)
+        let si = this.rows.findIndex(row => row.y === w.y)
         let row: Row
         if (si < 0) {
             row = new Row({ y: w.y, words: Array<Word>() })
@@ -298,7 +300,7 @@ export async function processPage(proxy: PDFPageProxy, globals: Globals) {
         const r = b.y - a.y
         return (r === 0) ? a.x - b.x : r
     })
-        .reduce((rows, item) => rows.process(item), new Page())
+    .reduce((page, item) => page.process(item), new Page())
 
 
     return page

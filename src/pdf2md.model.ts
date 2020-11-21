@@ -35,6 +35,8 @@ export interface ItemTransformer<T> {
 
 type TextTransformer = ItemTransformer<string>
 
+const FILLER = ' ¶ '
+
 export class EnhancedWord implements Word {
     x: number
     y: number
@@ -47,66 +49,68 @@ export class EnhancedWord implements Word {
 
     constructor(w: Word) {
         this.x = w.x
-        this.y = w.x
+        this.y = w.y
         this.width = w.width
         this.height = w.height
         this.text = w.text
         this.font = w.font
     }
+   
+    appendWord(w: Word, isLastWord:boolean ) {
 
-    get endX() { return this.x + this.width  }
+        let result = false
+        const endX = this.x + this.width
 
-    // get charWidth() { return this.width / this.text.length }
+        const canConcatFilter = (endX < w.x)
+        const canAppendWord = this.height === w.height && this.font === w.font
+        const fillerWidth = w.x - endX    
 
-    private _concatWord( word:Word ) {
-        //assert( endX < word.x, `X coord ${word.x} is inside this Enhanced Word` )
-        if( this.endX < word.x  ) {
-            
-            const fillerWidth = word.x - this.endX
-            
-            // if( this.charWidth >= 1 ) { 
+        const isWordTextBlank = w.text.trim().length === 0
 
-                // const numChars = Math.round(fillerWidth / this.charWidth) 
+        if (canAppendWord) {
 
-                // const filler = Array(numChars).fill(fill).join('') 
-                const filler = ' ¶ '
-                
-                this.text += filler.concat( word.text )
-                this.width += (fillerWidth + word.width)
-
-            // }
-    
+            if( canConcatFilter && !isWordTextBlank ) {
+                this.text += FILLER.concat(w.text)
+                this.width += w.width + fillerWidth    
+            }
+            else {
+                this.text += w.text
+                this.width += w.width          
+            }
+            result = true  
+        }     
+        else if( isLastWord && canConcatFilter && !isWordTextBlank )  {
+            this.text += FILLER.concat(w.text)
+            this.width += w.width + fillerWidth    
         }
-        else {
-            this.text += word.text
-            this.width += word.width    
-        }
-    }
 
-    canAppendWord(w: Word) {
-        return (this.height === w.height && this.font === w.font) 
-    }
-
-    appendWord(w: Word) {
-        if (this.canAppendWord(w)) {
-            this._concatWord( w )
-            return true
-        }
-        return false
+        return result
     }
 
     addTransformer(transformer: TextTransformer) {
-        if (this._transformer) return false
+        if (this._transformer) return false // GUARD
 
         this._transformer = transformer
 
-        // const prev = this._transformer
+        ////////////////////////////////////
+        // SUPPORT TRANSFORMER DEBUG
+        ////////////////////////////////////
+        // this._transformer = ( text:string ) => {
+        //     console.log( `transforming text ${text}`)
+        //     const result = transformer( text )
+        //     console.log( `transform text ${text} to ${result}`)
+        //     return result   
+        // }
 
+        ////////////////////////////////////
+        // SUPPORT TRANSFORMER CHAIN
+        ////////////////////////////////////
+
+        // const prev = this._transformer
         // this._transformer =  ( prev ) ?
         //     ( text:string ) => transformer(prev(text)) :
         //     transformer
-
-
+        
     }
 
     toMarkdown() {
