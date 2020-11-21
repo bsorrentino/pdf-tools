@@ -26,24 +26,25 @@ class ConsoleOutput {
 
     lines = Array<ConsoleFormat>()
 
-    private ellipsisText(text: string, maxChars: number) {
+    // private ellipsisText(text: string, maxChars: number) {
 
-        const regex = new RegExp(`(.{${maxChars}})..+`)
+    //     const regex = new RegExp(`(.{${maxChars}})..+`)
 
-        return text.replace(regex, "$1…")
-    }
+    //     return text.replace(regex, "$1…")
+    // }
 
     appendRow(row: Row) {
 
         if (row.containsImage) {
             const v = row.image
-            this.lines.push({ x: v?.x, y: v?.y, width: v?.width, height: v?.height, image: v?.url || 'undefined' })
+            this.lines.push({ y: v?.y, width: v?.width, x: v?.x,  height: v?.height, image: v?.url || 'undefined' })
         }
         if (row.containsWords) {
             const e = row.enhancedText
 
             const formats = e.map((etext, i) => {
-                const text = this.ellipsisText(etext.text, 100)
+                //const text = this.ellipsisText(etext.text, 100)
+                const text = etext.text 
                 const common = { height: etext.height, image: undefined, text: text, font: etext.font }
                 if (i == 0) {
                     return {  y: etext.y, width: etext.width, x: etext.x, ...common }
@@ -63,55 +64,46 @@ class ConsoleOutput {
 export class Row {
     y: number
     image?: Image
-    words?: Array<Word>
+    private _words?: Array<Word>
     private _etextArray?:Array<EnhancedWord>
 
     constructor(args: { y: number, words?: Array<Word>, image?: Image }) {
         this.y = args.y
-        this.words = args.words
+        this._words = args.words
         this.image = args.image
     }
 
     addWord( w:Word ) {
-        // const trimmedText = w.text.trim()
-        // if( trimmedText.length > 0 ) {
-        //     w.text = trimmedText
-        // }
-        this.words?.push( w )
+        this._words?.push( w )
         this._updateEnhancedText()
     }
 
     get containsImage() { return this.image !== undefined }
-    get containsWords() { return this.words !== undefined }
+    get containsWords() { return this._words !== undefined }
 
     private _updateEnhancedText() {  
-        if( this._etextArray ) return // GUARD 
-        if( !this.words || this.words.length == 0) return // GUARD
+        if( !this._words || this._words.length == 0) return // GUARD
 
         const init = {
             lastIndex: -1,
             result: Array<EnhancedWord>()
         }
 
-        this._etextArray =  this.words.reduce((state, w) => {
+        this._etextArray =  this._words.reduce((state, w /*, index, words*/) => {
 
             if (state.lastIndex < 0) {
                 state.result.push(new EnhancedWord(w))
                 state.lastIndex = 0
             }
             else {
+                //const isLastWord = index === words.length-1 
+                //const isTextBlank = w.text.trim().length === 0
+
                 const enhancedText = state.result[state.lastIndex]
 
                 if (!enhancedText.appendWord(w)) {
-                    
-                    const filler = enhancedText.createFillerWordToRect(w, '&nbsp;')
-                    if( filler ) {
-                        state.result.push( filler )
-                        state.lastIndex++
-                    }
-
                     state.result.push(new EnhancedWord(w))
-                    state.lastIndex++
+                    state.lastIndex++    
                 }
 
             }
@@ -157,18 +149,18 @@ export class Page {
 
     private processWord(w: Word) {
         let si = this.rows.findIndex(s => s.y == w.y)
-        let s: Row
+        let row: Row
         if (si < 0) {
-            s = new Row({ y: w.y, words: Array<Word>() })
-            this.rows.push(s)
+            row = new Row({ y: w.y, words: Array<Word>() })
+            this.rows.push(row)
         }
         else {
-            s = this.rows[si]
+            row = this.rows[si]
         }
 
         //assert( s.containsWords, `row ${si} not containing words! is it contain image?` )
-        if (s.containsWords) {
-            s.words?.push(w)
+        if (row.containsWords) {
+            row.addWord(w)
         }
         return this
     }

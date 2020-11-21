@@ -56,39 +56,40 @@ export class EnhancedWord implements Word {
 
     get endX() { return this.x + this.width  }
 
-    get charWidth() { return this.width / this.text.length }
+    // get charWidth() { return this.width / this.text.length }
 
-    createFillerWordToRect( rect:Rect, fill = ' ' ) {
-        //assert( endX < rect.x, `X coord ${rect.x} is inside this Enhanced Word` )
-        if(  this.endX < rect.x  ) {
+    private _concatWord( word:Word ) {
+        //assert( endX < word.x, `X coord ${word.x} is inside this Enhanced Word` )
+        if( this.endX < word.x  ) {
             
-            const witdh = rect.x - this.endX
+            const fillerWidth = word.x - this.endX
             
-            const numChars = Math.round(witdh / this.charWidth) 
+            // if( this.charWidth >= 1 ) { 
 
-            // console.log( numChars )
-            const filler = Array(numChars).fill(fill).join('') 
+                // const numChars = Math.round(fillerWidth / this.charWidth) 
 
-            return new EnhancedWord( <Word>{ x:this.endX, 
-                                             y:this.y, 
-                                             height:this.height, 
-                                             width:witdh, 
-                                             font:this.font,
-                                             text:filler 
-                                            }) 
+                // const filler = Array(numChars).fill(fill).join('') 
+                const filler = ' ¶ '
+                
+                this.text += filler.concat( word.text )
+                this.width += (fillerWidth + word.width)
+
+            // }
     
+        }
+        else {
+            this.text += word.text
+            this.width += word.width    
         }
     }
 
     canAppendWord(w: Word) {
-        return (this.height === w.height && this.font === w.font) && 
-                ( (w.x - this.endX) <= this.charWidth) 
+        return (this.height === w.height && this.font === w.font) 
     }
 
     appendWord(w: Word) {
         if (this.canAppendWord(w)) {
-            this.text += w.text
-            this.width += w.width
+            this._concatWord( w )
             return true
         }
         return false
