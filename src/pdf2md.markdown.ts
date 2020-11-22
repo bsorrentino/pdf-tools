@@ -81,21 +81,24 @@ export function isHeadline(type: BlockType) {
     return type && type.enumKey.length == 2 && type.enumKey[0] === 'H'
 }
 
+const  formatTextDetectingTrailingSpaces = ( text:string, prefix:string, suffix?:string ) =>  {
+    if( !suffix ) suffix = prefix
+    const rx = /^(.+[^\s])(\s*)$/.exec(text)
+    return ( rx ) ? `${prefix}${rx[1]}${suffix}${rx[2]}` : 'null'
+}
+
 export default class WordFormat extends Enumify {
 
     constructor( public toText:ToText ) { super() }
 
-    static BOLD             = new WordFormat( ( text ) => { 
-        const rx = /^(.+[^\s])(\s*)$/.exec(text)
-        console.log( text, rx )
-        return ( rx ) ? `**${rx[1]}**${rx[2]}` : 'null'
-    })
-    static OBLIQUE          = new WordFormat( ( text ) => `_${text}_` )
-    static BOLD_OBLIQUE     = new WordFormat( ( text ) => {
-        const rx = /^(.+)(\s*)$/.exec(text)
-        return ( rx ) ? `**_${rx[1]}_**${rx[2]}` : 'null'
-    })
-    static MONOSPACE        = new WordFormat( ( text ) => `\`${text}\`` )
+    static BOLD             = new WordFormat( ( text ) => formatTextDetectingTrailingSpaces(text, '**') )
+
+    static OBLIQUE          = new WordFormat( ( text ) => formatTextDetectingTrailingSpaces(text, '_') )
+
+    static BOLD_OBLIQUE     = new WordFormat( ( text ) => formatTextDetectingTrailingSpaces(text, '**_', '_**') )
+
+    static MONOSPACE        = new WordFormat( ( text ) => formatTextDetectingTrailingSpaces(text, '`') )
+
     static _ = WordFormat.closeEnum()
 }
 
@@ -132,7 +135,7 @@ function detectHeaders(row: Row) {
 
         const etext = row.enhancedText[0];
 
-        if( etext.height > mostUsedHeight ) {
+        if( etext.height != mostUsedHeight || etext.font != globals.stats.mostUsedFont ) {
 
             const level = globals.stats.textHeigths.findIndex( v => v == etext.height ) 
             assert( level >=0 , `height ${etext.height} not present in textHeights stats!` )
