@@ -3,7 +3,8 @@ import fs from 'fs'
 import { promisify } from 'util'
 
 import { getDocument, OPS, PDFImage } from 'pdfjs-dist'
-import { writePageImage } from './pdf2md.image';
+import { writePageAsImage, writePageImage } from './pdf2md.image';
+import { globals } from './pdf2md.global';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -15,7 +16,7 @@ const readFile = promisify( fs.readFile )
  * 
  * @param pdfPath 
  */
-async function main(pdfPath:string) {
+async function extractImagesfromPages(pdfPath:string) {
 
   try {
 
@@ -27,9 +28,7 @@ async function main(pdfPath:string) {
       cMapPacked: CMAP_PACKED,
     }).promise
 
-    const metadata = await pdfDocument.getMetadata()
-
-    console.log("# PDF document loaded.", metadata.info.PDFFormatVersion);
+    // const metadata = await pdfDocument.getMetadata()
 
     const pages = pdfDocument.numPages;
 
@@ -64,10 +63,71 @@ async function main(pdfPath:string) {
   }
 }
 
-  // STARTUP CODE
 
-  (async () => {
-    const pdfPath = process.argv[2] || "guidelines.pdf";
+/**
+ * 
+ * @param pdfPath 
+ */
+async function savePagesAsImages(pdfPath:string) {
 
-    await main( pdfPath )
-  })()
+  try {
+
+    const data = new Uint8Array( await readFile(pdfPath))
+
+    const pdfDocument = await getDocument({
+      data: data,
+      cMapUrl: CMAP_URL,
+      cMapPacked: CMAP_PACKED,
+    }).promise
+
+    // const metadata = await pdfDocument.getMetadata()
+
+    const pages = pdfDocument.numPages;
+
+    for (let i=1; i <= pages; i++) {
+
+      // Get the first page.
+      const page = await pdfDocument.getPage(i) 
+
+      await writePageAsImage( page )
+
+    
+    }
+  }
+  catch( reason ) {
+    console.log(reason) 
+  }
+}
+
+// STARTUP CODE
+import { program } from 'commander'
+
+program.version('1.0.0')
+        .name('pdftools')
+;
+
+program.command( 'extract-images <pdf>' )
+        .description( 'extract images (as png) from pdf and save it to the given folder')
+        .alias('xi')
+        .option( '-o, --outdir [folder]', 'output folder', 'out')
+        .action( (pdfPath, cmdobj) => {
+
+            globals.outDir = cmdobj.outdir
+
+            return extractImagesfromPages( pdfPath )
+        })
+        ;
+
+program.command( 'page2images <pdf>' )
+          .description( 'extract images (as png) from pdf and save it to the given folder')
+          .alias('p2i')
+          .option( '-o, --outdir [folder]', 'output folder', 'out')
+          .action( (pdfPath, cmdobj) => {
+
+              globals.outDir = cmdobj.outdir
+
+              return savePagesAsImages( pdfPath )
+          })
+          ;
+
+program.parseAsync(process.argv).then( () => {} ).catch( e => console.error(e) );
