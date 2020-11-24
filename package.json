@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "bin": {
-    "run": "./cli.js",
-    "npx-run": "./cli.js"
+    "pdftools": "./cli.js",
   },
   "scripts": {
     "pdf2md:build": "parcel build src/pdf2md.main.ts --no-minify --target node --out-dir bin",
