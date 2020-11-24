@@ -1,8 +1,12 @@
 {
-  "name": "pdf-tools",
-  "version": "1.0.0",
+  "name": "@bsorrentino/pdf-tools",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "run": "./cli.js",
+    "npx-run": "./cli.js"
+  },
   "scripts": {
     "pdf2md:build": "parcel build src/pdf2md.main.ts --no-minify --target node --out-dir bin",
     "pdf2md:start": "node bin/pdf2md.main.js",
