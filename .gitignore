@@ -1,3 +1,14 @@
+# Mac
+.DS_Store
+
+# Node
 node_modules/
-bin/
+
+# parcel
+# bin/
 .cache/
+
+# custom 
+out/
+private/
+tmp/
