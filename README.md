@@ -1,4 +1,4 @@
-# pdf-to-markdown
+# pdf-tools
 
 Extract images from PDF
 
