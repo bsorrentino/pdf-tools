@@ -130,53 +130,59 @@ export async function run() {
   program.version('0.0.1')
     .name('pdftools')
     .option('-o, --outdir [folder]', 'output folder', 'out')
+
+    .command('pdfximages <pdf>')
+      .description('extract images (as png) from pdf and save it to the given folder')
+      .alias('pxi')
+      .action((pdfPath, cmdobj) => {
+
+        globals.outDir = cmdobj.parent.outdir
+
+        return extractImagesfromPages(pdfPath)
+      })
+
+    .command('pdf2images <pdf>')
+      .description('create an image (as png) for each pdf page')
+      .alias('p2i')
+      .action(async (pdfPath, cmdobj) => {
+
+        await createFolderIfDoesntExist(cmdobj.parent.outdir)
+
+        globals.outDir = cmdobj.parent.outdir
+
+        return savePagesAsImages(pdfPath)
+      })
+
+    .command('pdf2md <pdf>')
+      .description('convert pdf to markdown format.')
+      .alias('p2md')
+      .option('--stats', 'print stats information')
+      .option('--debug', 'print debug information')
+      .action(async (pdfPath, cmdobj) => {
+
+        await createFolderIfDoesntExist(cmdobj.parent.outdir)
+
+        globals.outDir = cmdobj.parent.outdir
+
+        const options = {
+          debug: cmdobj.debug,
+          stats: cmdobj.stats
+        }
+
+        //console.log( options )
+
+        await pdfToMarkdown(pdfPath, options)
+      })
     ;
 
-  program.command('pdfximages <pdf>')
-    .description('extract images (as png) from pdf and save it to the given folder')
-    .alias('pxi')
-    .action((pdfPath, cmdobj) => {
+    // program.on('--help', () => {
 
-      globals.outDir = cmdobj.parent.outdir
+    //   program.commands.forEach( cmd => {
+    //     console.log( '=========================================================')
+    //     cmd.outputHelp()   
+    //   })
 
-      return extractImagesfromPages(pdfPath)
-    })
-    ;
-
-  program.command('pdf2images <pdf>')
-    .description('create an image (as png) for each pdf page')
-    .alias('p2i')
-    .action(async (pdfPath, cmdobj) => {
-
-      await createFolderIfDoesntExist(cmdobj.parent.outdir)
-
-      globals.outDir = cmdobj.parent.outdir
-
-      return savePagesAsImages(pdfPath)
-    })
-    ;
-
-  program.command('pdf2md <pdf>')
-    .description('convert pdf to markdown format.')
-    .alias('p2md')
-    .option('--stats', 'print stats information')
-    .option('--debug', 'print debug information')
-    .action(async (pdfPath, cmdobj) => {
-
-      await createFolderIfDoesntExist(cmdobj.parent.outdir)
-
-      globals.outDir = cmdobj.parent.outdir
-
-      const options = {
-        debug: cmdobj.debug,
-        stats: cmdobj.stats
-      }
-
-      //console.log( options )
-
-      await pdfToMarkdown(pdfPath, options)
-    })
-    ;
+    // });
 
   return await program.parseAsync(process.argv)
 }
