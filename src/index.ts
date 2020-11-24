@@ -11,6 +11,26 @@ const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
 
 const readFile = promisify( fs.readFile )
+const checkFileExistsAsync = promisify(fs.access)
+const mkdirAsync = promisify(fs.mkdir)
+
+/**
+ * 
+ * @param path 
+ */
+async function createFolderIfDoesntExist( path:string ) {
+
+  assert( path, `provided path is not valid`)
+
+  try {
+    await checkFileExistsAsync( path )
+  }
+  catch( e ) {
+    console.log( `folder ${path} doesn't exist, try to create`)
+    await mkdirAsync( path )
+  }
+ 
+}
 
 /**
  * 
@@ -101,32 +121,57 @@ async function savePagesAsImages(pdfPath:string) {
 
 // STARTUP CODE
 import { program } from 'commander'
+import { assert } from 'console';
+import { pdfToMarkdown } from './pdf2md.main';
 
 program.version('1.0.0')
         .name('pdftools')
+        .option( '-o, --outdir [folder]', 'output folder', 'out')
 ;
 
-program.command( 'extract-images <pdf>' )
+program.command( 'pdfximages <pdf>' )
         .description( 'extract images (as png) from pdf and save it to the given folder')
-        .alias('xi')
-        .option( '-o, --outdir [folder]', 'output folder', 'out')
+        .alias('pxi')
         .action( (pdfPath, cmdobj) => {
 
-            globals.outDir = cmdobj.outdir
+            globals.outDir = cmdobj.parent.outdir
 
             return extractImagesfromPages( pdfPath )
         })
         ;
 
-program.command( 'page2images <pdf>' )
-          .description( 'extract images (as png) from pdf and save it to the given folder')
+program.command( 'pdf2images <pdf>' )
+          .description( 'create an image (as png) for each pdf page')
           .alias('p2i')
-          .option( '-o, --outdir [folder]', 'output folder', 'out')
-          .action( (pdfPath, cmdobj) => {
+          .action( async (pdfPath, cmdobj) => {
 
-              globals.outDir = cmdobj.outdir
-
+              await createFolderIfDoesntExist( cmdobj.parent.outdir )
+    
+              globals.outDir = cmdobj.parent.outdir
+    
               return savePagesAsImages( pdfPath )
+          })
+          ;
+
+program.command( 'pdf2md <pdf>' )
+          .description( 'convert pdf to markdown format.')
+          .alias('p2md')
+          .option( '--stats', 'print stats information')
+          .option( '--debug', 'print debug information')
+          .action( async (pdfPath, cmdobj) => {
+
+              await createFolderIfDoesntExist( cmdobj.parent.outdir )
+    
+              globals.outDir = cmdobj.parent.outdir
+    
+              const options = {
+                debug:cmdobj.debug,
+                stats:cmdobj.stats
+              }
+
+              //console.log( options )
+
+              await pdfToMarkdown( pdfPath, options )
           })
           ;
 

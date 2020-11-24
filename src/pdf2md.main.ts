@@ -22,11 +22,14 @@ const writeFile = promisify(fs.writeFile)
  * 
  * @param pdfPath 
  */
-async function main(pdfPath: string) {
+export async function pdfToMarkdown(pdfPath: string, options: {
+  stats?:boolean, debug?:boolean } = { } ) {
 
   try {
 
-    const fontFile = path.join('tmp', `${path.basename(pdfPath, '.pdf')}.fonts.json`)
+    const basename = path.basename(pdfPath, '.pdf')
+
+    const fontFile = path.join(globals.outDir, `${basename}.fonts.json`)
 
     globals.loadLocalFonts( fontFile )
     
@@ -63,21 +66,16 @@ async function main(pdfPath: string) {
 
     globals.saveFonts( fontFile )
 
-    pages.forEach( p => p.consoleLog() )
-    console.table( [ globals.stats ] ); console.log( globals.stats.textHeigths)
+    if( options.debug ) {
+      pages.forEach( p => p.consoleLog() )
+    }
+
+    if( options.stats ) {
+      console.table( [ globals.stats ] ); console.log( globals.stats.textHeigths)  
+    }
 
   }
   catch (reason) {
     console.log(reason)
   }
 }
-
-
-// STARTUP CODE
-
-
-const pdfPath = process.argv[2] || "guidelines.pdf";
-// const pdfPath = process.argv[2] || path.join('private', 'document1.pdf')
-// const pdfPath = process.argv[2] || path.join('private', 'document2.pdf')
-
-main(pdfPath).then( () => {} )
