@@ -71,7 +71,7 @@ export async function pdfToMarkdown(pdfPath: string, options: {
     }
 
     if( options.stats ) {
-      console.table( [ globals.stats ] ); console.log( globals.stats.textHeigths)  
+      globals.consoleLog()
     }
 
   }

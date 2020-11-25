@@ -12,7 +12,7 @@ Tools to extract/transform data from PDF
  -o, --outdir [folder]        output folder (default: "out")
 ```
 
-### pdfximages
+### pdfximages
 
 extract images (as png) from pdf and save it to the given folder
 
@@ -45,8 +45,8 @@ pdftools pdf2md|p2md [options] <pdf>
   --debug     print debug information
 ```
 
----- 
+----
 
-## Conversion to Markdown 
+## Conversion to Markdown 
 
 __TO DO__
