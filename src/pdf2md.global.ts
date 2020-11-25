@@ -16,10 +16,10 @@ type FontStat = Font & { occurrence: number }
 export interface Stats {
     mostUsedFont: string // fontId
     mostUsedTextHeight: number
-    mostUsedTextDistanceY: number
     maxTextHeight: number
-    maxHeightFont: string | null
     textHeigths: Array<number>
+    maxHeightFont: string | null
+    mostUsedTextDistanceY: number
 }
 
 class Globals {
@@ -169,6 +169,14 @@ class Globals {
         this.imageUrlPrefix = process.env['IMAGE_URL'] || ''
     }
 
+    consoleLog() {
+
+
+        const log = [ { ...this.stats, textHeigths: JSON.stringify( this.stats.textHeigths) } ]
+
+        console.table( log )
+        
+    }
 }
 
 export const globals = new Globals()

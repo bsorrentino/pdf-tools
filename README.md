@@ -12,7 +12,7 @@ Tools to extract/transform data from PDF
  -o, --outdir [folder]        output folder (default: "out")
 ```
 
-### pdfximages
+### pdfximages
 
 extract images (as png) from pdf and save it to the given folder
 
@@ -45,8 +45,21 @@ pdftools pdf2md|p2md [options] <pdf>
   --debug     print debug information
 ```
 
----- 
+----
 
-## Conversion to Markdown 
+## Conversion to Markdown 
 
-__TO DO__
+### supported features
+
+* Detect headers
+* Detect and extract images 
+* Extract plain text 
+* Extract fonts and allow custom mapping through a generated file `<document name>.font.json`
+  > Supported fonts **bold**, _italic_, `monspace`, **_bold+italic_**
+
+### to do
+
+* Allow rows with images and text inline 
+* Detect code block ( i.e. ` ``` `)
+* Detect table 
+* Detect TOC

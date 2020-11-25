@@ -131,7 +131,7 @@ export async function run() {
     .name('pdftools')
     .option('-o, --outdir [folder]', 'output folder', 'out')
 
-    .command('pdfximages <pdf>')
+    program.command('pdfximages <pdf>')
       .description('extract images (as png) from pdf and save it to the given folder')
       .alias('pxi')
       .action((pdfPath, cmdobj) => {
@@ -140,8 +140,9 @@ export async function run() {
 
         return extractImagesfromPages(pdfPath)
       })
+      ;
 
-    .command('pdf2images <pdf>')
+    program.command('pdf2images <pdf>')
       .description('create an image (as png) for each pdf page')
       .alias('p2i')
       .action(async (pdfPath, cmdobj) => {
@@ -152,8 +153,9 @@ export async function run() {
 
         return savePagesAsImages(pdfPath)
       })
+      ;
 
-    .command('pdf2md <pdf>')
+      program.command('pdf2md <pdf>')
       .description('convert pdf to markdown format.')
       .alias('p2md')
       .option('--stats', 'print stats information')
