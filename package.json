@@ -1,16 +1,23 @@
 {
-  "name": "extract-pdf-images",
-  "version": "1.0.0",
+  "name": "@bsorrentino/pdf-tools",
+  "version": "0.0.3",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "pdftools": "./cli.js"
+  },
   "scripts": {
-    "build": "parcel build index.ts --target node --out-dir bin",
+    "pdf2md:build": "parcel build src/pdf2md.main.ts --no-minify --target node --out-dir bin",
+    "pdf2md:start": "node bin/pdf2md.main.js",
+    "build": "parcel build src/index.ts --target node --out-dir bin",
     "start": "node bin/index.js"
   },
   "author": "bsorrentino <bartolomeo.sorrentino@gmail.com> (http://soulsoftware-bsc.blogspot.it/)",
   "license": "ISC",
   "dependencies": {
     "canvas": "^2.6.1",
+    "commander": "^6.2.0",
+    "enumify": "^2.0.0",
     "jimp": "^0.16.1",
     "pdfjs-dist": "^2.5.207"
   },
