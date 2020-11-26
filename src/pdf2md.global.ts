@@ -28,7 +28,7 @@ class Globals {
     private _textHeights = new Map<number, number>()
 
     outDir: string
-    imageUrlPrefix: string
+    private _imageUrlPrefix = process.env['IMAGE_URL'] || ''
     isFillerEnabled = false
 
     /**
@@ -164,9 +164,19 @@ class Globals {
         }
     }
 
+    get imageUrlPrefix() { 
+        // console.log( `imageUrlPrefix ${this._imageUrlPrefix}`)
+        return this._imageUrlPrefix 
+    }
+    
+    set imageUrlPrefix( value:string ) {
+        if( !value || value.trim().length===0) return 
+
+        this._imageUrlPrefix = value.endsWith('/') ? value : value.concat('/')
+    }
+
     constructor() {
         this.outDir = path.join(process.cwd(), 'out')
-        this.imageUrlPrefix = process.env['IMAGE_URL'] || ''
     }
 
     consoleLog() {
