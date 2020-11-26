@@ -193,7 +193,7 @@ export function toMarkdown(page: Page ) {
         if ( row.images ) {
          
             md = row.images.reduce ( (out, img) => 
-                    out.concat(`![${img.url}](${globals.imageUrlPrefix}${img.url}.png "")`) , '') 
+                    out.concat(`![${img.url}](${globals.imageUrlPrefix}${img.url}.png)`) , '') 
 
         }
         if (row.containsWords) {
