@@ -158,11 +158,16 @@ export async function run() {
       program.command('pdf2md <pdf>')
       .description('convert pdf to markdown format.')
       .alias('p2md')
+      .option('--imageurl [url prefix]', 'imgage url prefix')
       .option('--stats', 'print stats information')
       .option('--debug', 'print debug information')
       .action(async (pdfPath, cmdobj) => {
 
         await createFolderIfDoesntExist(cmdobj.parent.outdir)
+
+        if( cmdobj.imageurl) {
+          globals.imageUrlPrefix = cmdobj.imageurl
+        }
 
         globals.outDir = cmdobj.parent.outdir
 
