@@ -268,19 +268,25 @@ export async function processPage(proxy: PDFPageProxy) {
 
                 const imageName = args[0];
 
-                const img = proxy.objs.get<PDFImage>(imageName);
+                try {
+                    const img = proxy.objs.get<PDFImage>(imageName);
 
-                // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
-                if (img) {
-                    await writePageImage(img, imageName, globals)
-
-                    images.push({
-                        y: position.y,
-                        x: position.x,
-                        width: img.width,
-                        height: img.height,
-                        url: imageName
-                    })
+                    // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
+                    if (img) {
+                        await writePageImage(img, imageName)
+    
+                        images.push({
+                            y: position.y,
+                            x: position.x,
+                            width: img.width,
+                            height: img.height,
+                            url: imageName
+                        })
+                    }
+    
+                }
+                catch( e ) { 
+                    console.warn( `image name ${imageName} not found!` )
                 }
 
                 imageMatrix = null
