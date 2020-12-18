@@ -39,6 +39,9 @@ class BlockType extends Enumify {
     static H6 = new BlockType({
         toText: (block) => `###### ${block}`
     })
+    static OVERFLOW = new BlockType({
+        toText: (block) => block
+    })
     /*
         static TOC = new BlockType( {
             mergeToBlock: true,
@@ -117,7 +120,12 @@ function blockTypeByLevel(level: number):BlockType {
 
     const blockType = BlockType.enumValues.find( e => e.enumKey == `H${level}` ) 
 
-    assert( blockType, `Unsupported headline level: ${level} (supported are 1-6)` )
+    //assert( blockType, `Unsupported headline level: ${level} (supported are 1-6)`)
+
+    if( !blockType ) {
+        console.warn( `Unsupported headline level: ${level} (supported are 1-6)` )
+        return BlockType.OVERFLOW
+    }
 
     return blockType as BlockType
 }
