@@ -3,7 +3,7 @@ import fs from 'fs'
 import { promisify } from 'util'
 
 import { getDocument, OPS, PDFImage } from 'pdfjs-dist'
-import { writePageAsImage, writePageImage } from './pdf2md.image';
+import { writePageAsImage, writePageImageOrReuseOneFromCache } from './pdf2md.image';
 import { globals } from './pdf2md.global';
 
 // Some PDFs need external cmaps.
@@ -69,7 +69,7 @@ async function extractImagesfromPages(pdfPath: string) {
 
           //const scale = img.width / page._pageInfo.view[2];
 
-          await writePageImage(img, op)
+          await writePageImageOrReuseOneFromCache(img, op)
           // await writePageAsImage( page )
 
         }

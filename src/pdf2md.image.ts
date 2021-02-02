@@ -6,6 +6,7 @@ import { promisify } from 'util'
 import Jimp from 'jimp'
 import { PDFImage, PDFPageProxy } from "pdfjs-dist"
 import { globals } from "./pdf2md.global"
+import { type } from "os"
 
 enum PDFImageKind {
     GRAYSCALE_1BPP = 1,
@@ -15,59 +16,68 @@ enum PDFImageKind {
 
 const writeFileAsync = promisify( fs.writeFile )
 
+type ImageHash = string
+type ImageName  = string
+
+const imagesCache = new Map<ImageHash,ImageName>();
+
 /**
  * 
  * @param img 
  * @param name 
  */
-export async function writePageImage( img:PDFImage, name:string) {
+export async function writePageImageOrReuseOneFromCache(img:PDFImage, name:ImageName):Promise<ImageName> {
 
     //console.log( `image ${name} - kind: ${img.kind}`)
-    try {
-  
-      let bytesPerPixel = 0 
-      switch( img.kind ) {
-        case PDFImageKind.RGB_24BPP:
-          bytesPerPixel = 3
-          break
-        case PDFImageKind.RGBA_32BPP:
-          bytesPerPixel = 4
-          break
-        case PDFImageKind.GRAYSCALE_1BPP:
-          assert( `kind ${img.kind} is not supported yet!`)
-          bytesPerPixel = 1
-          break
-        default:
-          assert( `kind ${img.kind} is not supported at all!`)
-          break
-  
+    let bytesPerPixel = 0 
+    switch( img.kind ) {
+      case PDFImageKind.RGB_24BPP:
+        bytesPerPixel = 3
+        break
+      case PDFImageKind.RGBA_32BPP:
+        bytesPerPixel = 4
+        break
+      case PDFImageKind.GRAYSCALE_1BPP:
+        assert( `kind ${img.kind} is not supported yet!`)
+        bytesPerPixel = 1
+        break
+      default:
+        assert( `kind ${img.kind} is not supported at all!`)
+        break
+
+    }
+
+    const jimg = new Jimp(img.width, img.height)
+    
+    const byteWidth = (img.width*bytesPerPixel)
+
+    for (var x=0; x<img.width; x++) {
+      for (var y=0; y<img.height; y++) {
+
+          const index = (y * byteWidth) + (x * bytesPerPixel);
+          const r = img.data[index];
+          const g = img.data[index+1];
+          const b = img.data[index+2];    
+          const a = bytesPerPixel == 3 ? 255 : img.data[index+3]
+
+          //const num = (r*256) + (g*256*256) + (b*256*256*256) + a;
+
+          const num = Jimp.rgbaToInt( r, g, b, a)
+          jimg.setPixelColor(num, x, y);
+          
       }
-  
-      const jimg = new Jimp(img.width, img.height)
-      
-      const byteWidth = (img.width*bytesPerPixel)
-  
-      for (var x=0; x<img.width; x++) {
-        for (var y=0; y<img.height; y++) {
-  
-            const index = (y * byteWidth) + (x * bytesPerPixel);
-            const r = img.data[index];
-            const g = img.data[index+1];
-            const b = img.data[index+2];    
-            const a = bytesPerPixel == 3 ? 255 : img.data[index+3]
-  
-            //const num = (r*256) + (g*256*256) + (b*256*256*256) + a;
-  
-            const num = Jimp.rgbaToInt( r, g, b, a)
-            jimg.setPixelColor(num, x, y);
-            
-        }
-      }
+    }
+
+    const imageHash = jimg.hash();
+    let result = imagesCache.get( imageHash );
+
+    if( !result ) {
       jimg.write(path.join(globals.outDir, `${name}.png`))
+      imagesCache.set( imageHash, name );
+      result = name  
     }
-    catch( error ) {
-      console.error( `Error:  ${error}`);
-    }
+
+    return result
   
   }
   
