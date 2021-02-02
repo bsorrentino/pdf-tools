@@ -1,7 +1,7 @@
 import assert from "assert";
 import { OPS, PDFImage, PDFPageProxy, Util } from "pdfjs-dist";
 import { globals } from "./pdf2md.global";
-import { writePageImage } from "./pdf2md.image";
+import { writePageImageOrReuseOneFromCache } from "./pdf2md.image";
 import { EnhancedWord, Rect, Word, Image, Font } from "./pdf2md.model";
 
 type TransformationMatrix = [
@@ -273,14 +273,14 @@ export async function processPage(proxy: PDFPageProxy) {
 
                     // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
                     if (img) {
-                        await writePageImage(img, imageName)
+                        const imageNameUsed = await writePageImageOrReuseOneFromCache(img, imageName)
     
                         images.push({
                             y: position.y,
                             x: position.x,
                             width: img.width,
                             height: img.height,
-                            url: imageName
+                            url: imageNameUsed
                         })
                     }
     
