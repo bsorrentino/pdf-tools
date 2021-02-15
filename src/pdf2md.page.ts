@@ -192,6 +192,15 @@ export class Page {
         return this
     }
 
+    insertRow( atIndex:number, w:Word ) {
+
+        if( atIndex < 0 || atIndex >= this.rows.length) throw `atIndex ${atIndex} is out of range!`
+
+        const row = new Row({ y: w.y, words: [w] })
+
+        this.rows.splice( atIndex, 0, row)
+    }
+
     /**
      * 
      */

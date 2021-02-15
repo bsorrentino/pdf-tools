@@ -105,12 +105,12 @@ export class EnhancedWord implements Word {
         //     transformer
         
     }
-
+    
     toMarkdown() {
         const result = (this._transformer) ? 
                     this._transformer(this.text) : this.text
 
-        return (globals.options.debug) ? `<!--${this.font}-->${result}` : result
+        return (result && globals.options.debug) ? `<!--${this.font}-->${result}` : result
     }
 
 }

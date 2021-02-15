@@ -2,7 +2,7 @@ import assert = require('assert')
 
 import { Enumify } from "enumify";
 import { globals } from './pdf2md.global';
-import { EnhancedWord, ItemTransformer } from "./pdf2md.model";
+import { EnhancedWord, ItemTransformer, Word } from "./pdf2md.model";
 import { Page, Row } from "./pdf2md.page";
 
 
@@ -86,7 +86,7 @@ export function isHeadline(type: BlockType) {
 
 const  formatTextDetectingTrailingSpaces = ( text:string, prefix:string, suffix?:string ) =>  {
     if( !suffix ) suffix = prefix
-    const rx = /^(.+[^\s])(\s*)$/.exec(text)
+    const rx = /^(.+[^\s]?)(\s*)$/.exec(text)
     return ( rx ) ? `${prefix}${rx[1]}${suffix}${rx[2]}` : 'null'
 }
 
@@ -208,7 +208,10 @@ function detectFonts(row: Row ) {
 //     }
 // }
 
-type CodeBlock = {start:number; end:number}
+type CodeBlock = {
+    start:number; 
+    end:number 
+    word:Word} 
 
 function detectCodeBlock(page: Page) {
 
@@ -218,37 +221,48 @@ function detectCodeBlock(page: Page) {
         return; // GUARD
     }
 
-    console.debug( `page.rows:${page.rows.length}, codeFontId:${codeFontId}`)
+    // console.debug( `page.rows:${page.rows.length}, codeFontId:${codeFontId}`)
 
-    const candidateToBeInCodeBlock = (etext:EnhancedWord[]) => 
-            ( etext.length == 1 && etext[0].font == codeFontId ) 
+    const candidateToBeInCodeBlock = (row:Row) => 
+            ( row.containsWords && row.enhancedText.length == 1 && row.enhancedText[0].font == codeFontId ) 
 
-    let codeBlock:CodeBlock|null = null ;
+    const codeBlocks = Array<CodeBlock>()
+
+    let currentCodeBlock:CodeBlock|null = null ;
 
     page.rows.forEach( (row, index ) => {
 
-        if( row.containsWords ) {
+        if( candidateToBeInCodeBlock(row) ) {
 
-            console.debug( `process.row:${index}`)
+            const word = row.enhancedText[0]
 
-            if( candidateToBeInCodeBlock(row.enhancedText) ) {
-                
-                if( codeBlock==null ) {
-                    codeBlock = { start:index, end:index }
-                }
-                else if( codeBlock.end+1 == index ) {
-                    codeBlock.end++
-                }
-                else {
-                    if( codeBlock.end > codeBlock.start ) {
-                        console.log( `Codeblock detected: { start:${codeBlock.start}; end:${codeBlock.end} }`)
-                    }
-                    codeBlock = { start:index, end:index }
-                }
+            if( currentCodeBlock==null ) {
+                currentCodeBlock = { start:index, end:index, word:{ ...word, text:'`'} }
             }
+            else {
+                currentCodeBlock.end = index
+            }
+        }
+        else {
+            if( currentCodeBlock!=null && currentCodeBlock.end > currentCodeBlock.start ) {
+                // console.log( `Codeblock detected: { start:${currentCodeBlock.start}; end:${currentCodeBlock.end} }`)
+                currentCodeBlock.end = index
+                codeBlocks.push( currentCodeBlock )
+            }
+            currentCodeBlock = null
         }
     })
 
+    let offset = 0;
+    codeBlocks.forEach( cb => {
+
+        for( let ii = cb.start + offset; ii < cb.end + offset; ++ii) {
+            page.rows[ii].enhancedText[0].addTransformer( (text) => text )
+        }
+        page.insertRow( cb.start    + offset++, cb.word )
+        page.insertRow( cb.end      + offset++, cb.word )
+
+    })
 }
 
 export function toMarkdown(page: Page ) {
