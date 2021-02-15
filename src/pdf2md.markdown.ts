@@ -253,7 +253,9 @@ function detectCodeBlock(page: Page) {
 }
 
 export function toMarkdown(page: Page ) {
-    //const pageContainsMaxHeight = page.rows.filter(row => row.containsWords).findIndex(row => row.containsTextWithHeight(globals.stats.maxTextHeight)) >= 0
+    // const pageContainsMaxHeight = 
+    //     page.rows.filter(row => 
+    //         row.containsWords).findIndex(row => row.containsTextWithHeight(globals.stats.maxTextHeight)) >= 0
 
     detectCodeBlock(page)
 

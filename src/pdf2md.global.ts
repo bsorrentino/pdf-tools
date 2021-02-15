@@ -26,10 +26,16 @@ class Globals {
 
     private _fontMap = new Map<string, FontStat>()
     private _textHeights = new Map<number, number>()
+    private _imageUrlPrefix = process.env['IMAGE_URL'] || ''
+    private _options = {
+        filler: false,
+        debug: false,
+        stats: false
+    }
 
     outDir: string
-    private _imageUrlPrefix = process.env['IMAGE_URL'] || ''
-    isFillerEnabled = false
+
+    get options() { return this._options }
 
     /**
      * 
