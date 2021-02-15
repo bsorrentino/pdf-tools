@@ -208,10 +208,6 @@ function detectFonts(row: Row ) {
 //     }
 // }
 
-function candidateToBeInCodeBlock( etext:EnhancedWord[], codeFontId:String ) {
-    return ( etext.length == 1 && etext[0].font == codeFontId ) 
-}
-
 type CodeBlock = {start:number; end:number}
 
 function detectCodeBlock(page: Page) {
@@ -224,6 +220,9 @@ function detectCodeBlock(page: Page) {
 
     console.debug( `page.rows:${page.rows.length}, codeFontId:${codeFontId}`)
 
+    const candidateToBeInCodeBlock = (etext:EnhancedWord[]) => 
+            ( etext.length == 1 && etext[0].font == codeFontId ) 
+
     let codeBlock:CodeBlock|null = null ;
 
     page.rows.forEach( (row, index ) => {
@@ -232,7 +231,7 @@ function detectCodeBlock(page: Page) {
 
             console.debug( `process.row:${index}`)
 
-            if( candidateToBeInCodeBlock(row.enhancedText, codeFontId) ) {
+            if( candidateToBeInCodeBlock(row.enhancedText) ) {
                 
                 if( codeBlock==null ) {
                     codeBlock = { start:index, end:index }
