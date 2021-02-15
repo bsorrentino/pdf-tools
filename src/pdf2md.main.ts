@@ -22,8 +22,7 @@ const writeFile = promisify(fs.writeFile)
  * 
  * @param pdfPath 
  */
-export async function pdfToMarkdown(pdfPath: string, options: {
-  stats?:boolean, debug?:boolean } = { } ) {
+export async function pdfToMarkdown(pdfPath: string) {
 
   try {
 
@@ -66,11 +65,11 @@ export async function pdfToMarkdown(pdfPath: string, options: {
 
     globals.saveFonts( fontFile )
 
-    if( options.debug ) {
+    if( globals.options.debug ) {
       pages.forEach( p => p.consoleLog() )
     }
 
-    if( options.stats ) {
+    if( globals.options.stats ) {
       globals.consoleLog()
     }
 

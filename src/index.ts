@@ -171,14 +171,12 @@ export async function run() {
 
         globals.outDir = cmdobj.parent.outdir
 
-        const options = {
-          debug: cmdobj.debug,
-          stats: cmdobj.stats
-        }
-
+        globals.options.debug = cmdobj.debug
+        globals.options.stats = cmdobj.stats
+      
         //console.log( options )
 
-        await pdfToMarkdown(pdfPath, options)
+        await pdfToMarkdown(pdfPath)
       })
     ;
 
