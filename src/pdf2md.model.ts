@@ -62,7 +62,7 @@ export class EnhancedWord implements Word {
 
         if (canAppendWord) {
 
-            if( canConcatFilter && !isWordTextBlank && globals.isFillerEnabled ) {
+            if( canConcatFilter && !isWordTextBlank && globals.options.filler ) {
                 this.text += FILLER.concat(w.text)
                 this.width += w.width + fillerWidth    
             }
@@ -72,7 +72,7 @@ export class EnhancedWord implements Word {
             }
             result = true  
         }     
-        else if( isLastWord && canConcatFilter && !isWordTextBlank && globals.isFillerEnabled)  {
+        else if( isLastWord && canConcatFilter && !isWordTextBlank && globals.options.filler)  {
             this.text += FILLER.concat(w.text)
             this.width += w.width + fillerWidth    
         }
@@ -105,9 +105,12 @@ export class EnhancedWord implements Word {
         //     transformer
         
     }
-
+    
     toMarkdown() {
-        return ( this._transformer ) ? this._transformer(this.text) : this.text
+        const result = (this._transformer) ? 
+                    this._transformer(this.text) : this.text
+
+        return (result && globals.options.debug) ? `<!--${this.font}-->${result}` : result
     }
 
 }

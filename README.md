@@ -56,10 +56,10 @@ pdftools pdf2md|p2md [options] <pdf>
 * Extract plain text 
 * Extract fonts and allow custom mapping through a generated file `<document name>.font.json`
   > Supported fonts **bold**, _italic_, `monspace`, **_bold+italic_**
+* Detect code block ( i.e. ` ``` `)
 
 ### to do
 
 * Allow rows with images and text inline 
-* Detect code block ( i.e. ` ``` `)
 * Detect table 
 * Detect TOC

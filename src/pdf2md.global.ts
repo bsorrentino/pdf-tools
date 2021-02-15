@@ -26,10 +26,16 @@ class Globals {
 
     private _fontMap = new Map<string, FontStat>()
     private _textHeights = new Map<number, number>()
+    private _imageUrlPrefix = process.env['IMAGE_URL'] || ''
+    private _options = {
+        filler: false,
+        debug: false,
+        stats: false
+    }
 
     outDir: string
-    private _imageUrlPrefix = process.env['IMAGE_URL'] || ''
-    isFillerEnabled = false
+
+    get options() { return this._options }
 
     /**
      * 
@@ -54,6 +60,16 @@ class Globals {
      */
     getFont(fontId: string): Font | undefined {
         return this._fontMap.get(fontId) as Font
+    }
+
+    /**
+     * 
+     * @param fontId 
+     */
+    getFontIdByName(name: string): string | undefined {
+        for( const [k,f] of this._fontMap.entries() ) 
+            if( f.name == name ) 
+                return k
     }
 
     /**

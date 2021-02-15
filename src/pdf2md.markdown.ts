@@ -2,7 +2,7 @@ import assert = require('assert')
 
 import { Enumify } from "enumify";
 import { globals } from './pdf2md.global';
-import { ItemTransformer } from "./pdf2md.model";
+import { EnhancedWord, ItemTransformer, Word } from "./pdf2md.model";
 import { Page, Row } from "./pdf2md.page";
 
 
@@ -86,7 +86,7 @@ export function isHeadline(type: BlockType) {
 
 const  formatTextDetectingTrailingSpaces = ( text:string, prefix:string, suffix?:string ) =>  {
     if( !suffix ) suffix = prefix
-    const rx = /^(.+[^\s])(\s*)$/.exec(text)
+    const rx = /^(.+[^\s]?)(\s*)$/.exec(text)
     return ( rx ) ? `${prefix}${rx[1]}${suffix}${rx[2]}` : 'null'
 }
 
@@ -164,7 +164,7 @@ function detectFonts(row: Row ) {
         const fontId    = etext.font
         const font      = globals.getFont( fontId )
 
-        if (font && font.name != null && fontId != globals.stats.mostUsedFont) {
+        if (font && font.name != null /*&& fontId != globals.stats.mostUsedFont*/ ) {
 
             const fontName = font.name.toLowerCase()
             
@@ -190,8 +190,87 @@ function detectFonts(row: Row ) {
     })
 }
 
+// class Stack<T> {
+//     private _values = Array<T>();
+
+//     push( value:T ) {
+//         this._values.push(value);
+//     }
+//     peek():T|undefined {
+//         if(this._values.length>0) {
+//             return this._values[ this._values.length-1 ]
+//         } 
+//     }
+//     pop():T|undefined {
+//         if(this._values.length>0) {
+//             return this._values.shift()
+//         }
+//     }
+// }
+
+type CodeBlock = {
+    start:number; 
+    end:number 
+    word:Word} 
+
+function detectCodeBlock(page: Page) {
+
+    const codeFontId = globals.getFontIdByName('monospace') || globals.getFontIdByName('code')
+    if( !codeFontId ) {
+        console.warn(`monospace or code font doesn't exists!`)
+        return; // GUARD
+    }
+
+    // console.debug( `page.rows:${page.rows.length}, codeFontId:${codeFontId}`)
+
+    const candidateToBeInCodeBlock = (row:Row) => 
+            ( row.containsWords && row.enhancedText.length == 1 && row.enhancedText[0].font == codeFontId ) 
+
+    const codeBlocks = Array<CodeBlock>()
+
+    let currentCodeBlock:CodeBlock|null = null ;
+
+    page.rows.forEach( (row, index ) => {
+
+        if( candidateToBeInCodeBlock(row) ) {
+
+            const word = row.enhancedText[0]
+
+            if( currentCodeBlock==null ) {
+                currentCodeBlock = { start:index, end:index, word:{ ...word, text:'`'} }
+            }
+            else {
+                currentCodeBlock.end = index
+            }
+        }
+        else {
+            if( currentCodeBlock!=null && currentCodeBlock.end > currentCodeBlock.start ) {
+                // console.log( `Codeblock detected: { start:${currentCodeBlock.start}; end:${currentCodeBlock.end} }`)
+                currentCodeBlock.end = index
+                codeBlocks.push( currentCodeBlock )
+            }
+            currentCodeBlock = null
+        }
+    })
+
+    let offset = 0;
+    codeBlocks.forEach( cb => {
+
+        for( let ii = cb.start + offset; ii < cb.end + offset; ++ii) {
+            page.rows[ii].enhancedText[0].addTransformer( (text) => text )
+        }
+        page.insertRow( cb.start    + offset++, cb.word )
+        page.insertRow( cb.end      + offset++, cb.word )
+
+    })
+}
+
 export function toMarkdown(page: Page ) {
-    //const pageContainsMaxHeight = page.rows.filter(row => row.containsWords).findIndex(row => row.containsTextWithHeight(globals.stats.maxTextHeight)) >= 0
+    // const pageContainsMaxHeight = 
+    //     page.rows.filter(row => 
+    //         row.containsWords).findIndex(row => row.containsTextWithHeight(globals.stats.maxTextHeight)) >= 0
+
+    detectCodeBlock(page)
 
     const init = ''
 
@@ -199,10 +278,8 @@ export function toMarkdown(page: Page ) {
 
         let md = ''
         if ( row.images ) {
-         
             md = row.images.reduce ( (out, img) => 
                     out.concat(`![${img.url}](${globals.imageUrlPrefix}${img.url}.png)`) , '') 
-
         }
         if (row.containsWords) {
 
@@ -210,7 +287,6 @@ export function toMarkdown(page: Page ) {
             detectFonts( row )
 
             md = row.enhancedText.reduce((out, etext) => out.concat(etext.toMarkdown()), '')
-
         }
 
         return result.concat(md).concat('\n')
