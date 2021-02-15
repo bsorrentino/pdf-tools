@@ -107,7 +107,9 @@ export class EnhancedWord implements Word {
     }
 
     toMarkdown() {
-        return ( this._transformer ) ? this._transformer(this.text) : this.text
+        const r = (this._transformer) ? 
+                    this._transformer(this.text) : this.text
+        return `<!--${this.font}-->${r}`
     }
 
 }

@@ -58,6 +58,16 @@ class Globals {
 
     /**
      * 
+     * @param fontId 
+     */
+    getFontIdByName(name: string): string | undefined {
+        for( const [k,f] of this._fontMap.entries() ) 
+            if( f.name == name ) 
+                return k
+    }
+
+    /**
+     * 
      * @param height 
      */
     addTextHeight(height: number) {

@@ -2,7 +2,7 @@ import assert = require('assert')
 
 import { Enumify } from "enumify";
 import { globals } from './pdf2md.global';
-import { ItemTransformer } from "./pdf2md.model";
+import { EnhancedWord, ItemTransformer } from "./pdf2md.model";
 import { Page, Row } from "./pdf2md.page";
 
 
@@ -164,7 +164,7 @@ function detectFonts(row: Row ) {
         const fontId    = etext.font
         const font      = globals.getFont( fontId )
 
-        if (font && font.name != null && fontId != globals.stats.mostUsedFont) {
+        if (font && font.name != null /*&& fontId != globals.stats.mostUsedFont*/ ) {
 
             const fontName = font.name.toLowerCase()
             
@@ -190,8 +190,72 @@ function detectFonts(row: Row ) {
     })
 }
 
+// class Stack<T> {
+//     private _values = Array<T>();
+
+//     push( value:T ) {
+//         this._values.push(value);
+//     }
+//     peek():T|undefined {
+//         if(this._values.length>0) {
+//             return this._values[ this._values.length-1 ]
+//         } 
+//     }
+//     pop():T|undefined {
+//         if(this._values.length>0) {
+//             return this._values.shift()
+//         }
+//     }
+// }
+
+function candidateToBeInCodeBlock( etext:EnhancedWord[], codeFontId:String ) {
+    return ( etext.length == 1 && etext[0].font == codeFontId ) 
+}
+
+type CodeBlock = {start:number; end:number}
+
+function detectCodeBlock(page: Page) {
+
+    const codeFontId = globals.getFontIdByName('monospace') || globals.getFontIdByName('code')
+    if( !codeFontId ) {
+        console.warn(`monospace or code font doesn't exists!`)
+        return; // GUARD
+    }
+
+    console.debug( `page.rows:${page.rows.length}, codeFontId:${codeFontId}`)
+
+    let codeBlock:CodeBlock|null = null ;
+
+    page.rows.forEach( (row, index ) => {
+
+        if( row.containsWords ) {
+
+            console.debug( `process.row:${index}`)
+
+            if( candidateToBeInCodeBlock(row.enhancedText, codeFontId) ) {
+                
+                if( codeBlock==null ) {
+                    codeBlock = { start:index, end:index }
+                }
+                else if( codeBlock.end+1 == index ) {
+                    codeBlock.end++
+                }
+                else {
+                    if( codeBlock.end > codeBlock.start ) {
+                        console.log( `Codeblock detected: { start:${codeBlock.start}; end:${codeBlock.end} }`)
+                    }
+                    codeBlock = { start:index, end:index }
+                }
+            }
+        }
+    })
+
+}
+
 export function toMarkdown(page: Page ) {
     //const pageContainsMaxHeight = page.rows.filter(row => row.containsWords).findIndex(row => row.containsTextWithHeight(globals.stats.maxTextHeight)) >= 0
+
+    detectCodeBlock(page)
 
     const init = ''
 
@@ -199,10 +263,8 @@ export function toMarkdown(page: Page ) {
 
         let md = ''
         if ( row.images ) {
-         
             md = row.images.reduce ( (out, img) => 
                     out.concat(`![${img.url}](${globals.imageUrlPrefix}${img.url}.png)`) , '') 
-
         }
         if (row.containsWords) {
 
@@ -210,7 +272,6 @@ export function toMarkdown(page: Page ) {
             detectFonts( row )
 
             md = row.enhancedText.reduce((out, etext) => out.concat(etext.toMarkdown()), '')
-
         }
 
         return result.concat(md).concat('\n')
