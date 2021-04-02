@@ -28,7 +28,8 @@ export async function pdfToMarkdown(pdfPath: string) {
 
     const basename = path.basename(pdfPath, '.pdf')
 
-    const fontFile = path.join(globals.outDir, `${basename}.fonts.json`)
+    const fontFile  = path.join(globals.outDir, `${basename}.fonts.json`)
+    const outFile   = path.join(globals.outDir, `${basename}.md`)
 
     globals.loadLocalFonts( fontFile )
     
@@ -61,7 +62,7 @@ export async function pdfToMarkdown(pdfPath: string) {
     const content = pages.map( page => toMarkdown( page ) )
                           .reduce( (result, pageText ) => result.concat(pageText), '')
 
-    await writeFile( path.join( globals.outDir, 'out.md'), content )
+    await writeFile( outFile, content )
 
     globals.saveFonts( fontFile )
 

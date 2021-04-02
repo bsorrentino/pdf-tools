@@ -1,6 +1,7 @@
 import 'pdfjs-dist/es5/build/pdf.js';
 import fs from 'fs'
 import { promisify } from 'util'
+import path from 'path';
 
 import { getDocument, OPS, PDFImage } from 'pdfjs-dist'
 import { writePageAsImage, writePageImageOrReuseOneFromCache } from './pdf2md.image';
@@ -30,6 +31,7 @@ async function createFolderIfDoesntExist(path: string) {
     await mkdirAsync(path)
   }
 
+  return path
 }
 
 /**
@@ -126,18 +128,22 @@ import { pdfToMarkdown } from './pdf2md.main';
 
 export async function run() {
 
+  const choosePath = ( pdfPath:any, cmdobj:any ) => 
+              ( cmdobj.parent.outdir ) ? 
+                            cmdobj.parent.outdir : 
+                            path.basename(pdfPath, '.pdf')
 
-  program.version('0.0.1')
+  program.version('0.2.0')
     .name('pdftools')
-    .option('-o, --outdir [folder]', 'output folder', 'out')
+    .option('-o, --outdir [folder]', 'output folder')
 
     program.command('pdfximages <pdf>')
       .description('extract images (as png) from pdf and save it to the given folder')
       .alias('pxi')
-      .action((pdfPath, cmdobj) => {
+      .action( async (pdfPath, cmdobj) => {
 
-        globals.outDir = cmdobj.parent.outdir
-
+        globals.outDir = await createFolderIfDoesntExist(choosePath( pdfPath, cmdobj))
+        
         return extractImagesfromPages(pdfPath)
       })
       ;
@@ -147,9 +153,7 @@ export async function run() {
       .alias('p2i')
       .action(async (pdfPath, cmdobj) => {
 
-        await createFolderIfDoesntExist(cmdobj.parent.outdir)
-
-        globals.outDir = cmdobj.parent.outdir
+        globals.outDir = await createFolderIfDoesntExist(choosePath( pdfPath, cmdobj))
 
         return savePagesAsImages(pdfPath)
       })
@@ -163,13 +167,11 @@ export async function run() {
       .option('--debug', 'print debug information')
       .action(async (pdfPath, cmdobj) => {
 
-        await createFolderIfDoesntExist(cmdobj.parent.outdir)
+        globals.outDir = await createFolderIfDoesntExist(choosePath( pdfPath, cmdobj))
 
         if( cmdobj.imageurl) {
           globals.imageUrlPrefix = cmdobj.imageurl
         }
-
-        globals.outDir = cmdobj.parent.outdir
 
         globals.options.debug = cmdobj.debug
         globals.options.stats = cmdobj.stats
