@@ -68,13 +68,22 @@ export async function writePageImageOrReuseOneFromCache(img:PDFImage, name:Image
       }
     }
 
-    const imageHash = jimg.hash();
-    let result = imagesCache.get( imageHash );
+    let result:string|undefined = name
 
-    if( !result ) {
+    if( globals.useImageDuplicateDetection ) {
+
+      const imageHash = jimg.hash();
+      result = imagesCache.get( imageHash );
+  
+      if( !result ) {
+        jimg.write(path.join(globals.outDir, `${name}.png`))
+        imagesCache.set( imageHash, name );
+        result = name  
+      }
+  
+    }
+    else {
       jimg.write(path.join(globals.outDir, `${name}.png`))
-      imagesCache.set( imageHash, name );
-      result = name  
     }
 
     return result
