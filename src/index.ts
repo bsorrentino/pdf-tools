@@ -133,7 +133,7 @@ export async function run() {
                             cmdobj.parent.outdir : 
                             path.basename(pdfPath, '.pdf')
 
-  program.version('0.2.1')
+  program.version('0.3.0')
     .name('pdftools')
     .option('-o, --outdir [folder]', 'output folder')
 
