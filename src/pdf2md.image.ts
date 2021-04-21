@@ -17,9 +17,12 @@ enum PDFImageKind {
 const writeFileAsync = promisify( fs.writeFile )
 
 type ImageHash = string
-type ImageName  = string
-
-const imagesCache = new Map<ImageHash,ImageName>();
+type ImageName = string
+type ImageData = {
+  jimg:Jimp,
+  name:ImageName
+}
+const imagesCache = new Map<ImageHash,Array<ImageData>>();
 
 /**
  * 
@@ -68,13 +71,31 @@ export async function writePageImageOrReuseOneFromCache(img:PDFImage, name:Image
       }
     }
 
-    const imageHash = jimg.hash();
-    let result = imagesCache.get( imageHash );
+    let result
+
+    if( globals.useImageDuplicateDetection ) {
+
+      const imageHash = jimg.hash();
+      const cachedItem = imagesCache.get( imageHash );
+  
+      if( cachedItem ) {
+        const equals = cachedItem.find( item => Jimp.diff( jimg, item.jimg ).percent == 0  )
+        if( equals ) {
+          result = equals.name
+        }
+        else {
+          cachedItem.push( { name:name, jimg:jimg} )
+        }
+      }
+      else {
+        imagesCache.set( imageHash, [{ name:name, jimg:jimg}] );
+      }
+  
+    }
 
     if( !result ) {
       jimg.write(path.join(globals.outDir, `${name}.png`))
-      imagesCache.set( imageHash, name );
-      result = name  
+      return name
     }
 
     return result
