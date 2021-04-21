@@ -34,7 +34,8 @@ class Globals {
     }
 
     outDir: string
-    useImageDuplicateDetection = false
+
+    get useImageDuplicateDetection() { return true }
 
     get options() { return this._options }
 
