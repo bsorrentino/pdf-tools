@@ -3,9 +3,15 @@ import fs from 'fs'
 import { promisify } from 'util'
 import path from 'path';
 
-import { getDocument, OPS, PDFImage } from 'pdfjs-dist'
 import { writePageAsImage, writePageImageOrReuseOneFromCache } from './pdf2md.image';
 import { globals } from './pdf2md.global';
+
+import { program } from 'commander'
+import { assert } from 'console';
+import { pdfToMarkdown } from './pdf2md.main';
+import { getDocument } from 'pdfjs-dist/types/display/api';
+import { OPS } from 'pdfjs-dist/types/shared/util';
+
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -120,11 +126,6 @@ async function savePagesAsImages(pdfPath: string) {
     console.log(reason)
   }
 }
-
-// STARTUP CODE
-import { program } from 'commander'
-import { assert } from 'console';
-import { pdfToMarkdown } from './pdf2md.main';
 
 export async function run() {
 

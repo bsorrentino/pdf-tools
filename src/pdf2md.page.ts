@@ -1,8 +1,11 @@
+import 'pdfjs-dist/es5/build/pdf.js';
 import assert from "assert";
-import { OPS, PDFImage, PDFPageProxy, Util } from "pdfjs-dist";
 import { globals } from "./pdf2md.global";
 import { writePageImageOrReuseOneFromCache } from "./pdf2md.image";
 import { EnhancedWord, Rect, Word, Image, Font } from "./pdf2md.model";
+import { PDFPageProxy } from 'pdfjs-dist/types/display/api';
+import { OPS, Util } from 'pdfjs-dist/types/shared/util';
+
 
 type TransformationMatrix = [
     scalex: number,
@@ -242,7 +245,7 @@ export async function processPage(proxy: PDFPageProxy) {
 
                 let font: Font | null
                 try {
-                    font = proxy.objs.get<Font>(fontId)
+                    font = proxy.objs.get(fontId) as Font
                     if (font)
                         globals.addFont(fontId, font)
                 }
@@ -278,7 +281,7 @@ export async function processPage(proxy: PDFPageProxy) {
                 const imageName = args[0];
 
                 try {
-                    const img = proxy.objs.get<PDFImage>(imageName);
+                    const img = proxy.objs.get(imageName) as PDFImage;
 
                     // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
                     if (img) {
