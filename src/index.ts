@@ -9,8 +9,8 @@ import { globals } from './pdf2md.global';
 import { program } from 'commander'
 import { assert } from 'console';
 import { pdfToMarkdown } from './pdf2md.main';
-import { getDocument } from 'pdfjs-dist/types/display/api';
-import { OPS } from 'pdfjs-dist/types/shared/util';
+import { getDocument, OPS } from 'pdfjs-dist';
+
 
 
 // Some PDFs need external cmaps.

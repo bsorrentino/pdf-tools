@@ -2,7 +2,7 @@ import assert = require('assert')
 
 import { Enumify } from "enumify";
 import { globals } from './pdf2md.global';
-import { EnhancedWord, ItemTransformer, Word } from "./pdf2md.model";
+import { ItemTransformer, Word } from "./pdf2md.model";
 import { Page, Row } from "./pdf2md.page";
 
 

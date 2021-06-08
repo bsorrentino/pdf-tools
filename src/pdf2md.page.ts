@@ -1,10 +1,9 @@
-import 'pdfjs-dist/es5/build/pdf.js';
 import assert from "assert";
 import { globals } from "./pdf2md.global";
 import { writePageImageOrReuseOneFromCache } from "./pdf2md.image";
 import { EnhancedWord, Rect, Word, Image, Font } from "./pdf2md.model";
 import { PDFPageProxy } from 'pdfjs-dist/types/display/api';
-import { OPS, Util } from 'pdfjs-dist/types/shared/util';
+import { OPS, Util } from 'pdfjs-dist';
 
 
 type TransformationMatrix = [
