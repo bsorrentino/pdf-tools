@@ -9,6 +9,7 @@ const pdf2md_global_1 = require("./pdf2md.global");
 const pdf2md_image_1 = require("./pdf2md.image");
 const pdf2md_model_1 = require("./pdf2md.model");
 const pdfjs_dist_1 = require("pdfjs-dist");
+const pdf2md_link_1 = require("./pdf2md.link");
 class ConsoleOutput {
     constructor() {
         this.lines = Array();
@@ -148,8 +149,8 @@ exports.Page = Page;
 function mergeItemsArray(a, b) {
     return a.concat(b);
 }
-async function processPage(proxy) {
-    const ops = await proxy.getOperatorList();
+async function processPage(page) {
+    const ops = await page.getOperatorList();
     let imageMatrix = null;
     const images = Array();
     ops.fnArray.forEach(async (fn, j) => {
@@ -159,7 +160,7 @@ async function processPage(proxy) {
                 const fontId = args[0];
                 let font;
                 try {
-                    font = proxy.objs.get(fontId);
+                    font = page.objs.get(fontId);
                     if (font)
                         pdf2md_global_1.globals.addFont(fontId, font);
                 }
@@ -180,7 +181,7 @@ async function processPage(proxy) {
                 }
                 const imageName = args[0];
                 try {
-                    const img = proxy.objs.get(imageName);
+                    const img = page.objs.get(imageName);
                     if (img) {
                         const imageNameUsed = await pdf2md_image_1.writePageImageOrReuseOneFromCache(img, imageName);
                         images.push({
@@ -197,18 +198,24 @@ async function processPage(proxy) {
                 }
                 imageMatrix = null;
                 break;
+            case pdfjs_dist_1.OPS.beginAnnotations:
+                break;
+            case pdfjs_dist_1.OPS.endAnnotations:
+                break;
             case pdfjs_dist_1.OPS.beginAnnotation:
+                break;
             case pdfjs_dist_1.OPS.endAnnotation:
-                console.log(args);
                 break;
             default:
                 break;
         }
     });
+    const links = [];
     const scale = 1.0;
-    const viewport = proxy.getViewport({ scale: scale });
-    const textContent = await proxy.getTextContent();
+    const viewport = page.getViewport({ scale: scale });
+    const textContent = await page.getTextContent();
     const words = textContent.items.map(item => {
+        var _a;
         const tx = pdfjs_dist_1.Util.transform(viewport.transform, item.transform);
         const fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
         const dividedHeight = item.height / fontHeight;
@@ -219,14 +226,19 @@ async function processPage(proxy) {
             height: Math.round(dividedHeight <= 1 ? item.height : dividedHeight)
         };
         pdf2md_global_1.globals.addTextHeight(textRect.height);
+        const url = (_a = links.find(lnk => pdf2md_link_1.matchLink(textRect, lnk))) === null || _a === void 0 ? void 0 : _a.url;
+        if (url) {
+            console.log(`link '${url} detectd on '${item.str}:'`);
+            return Object.assign({ text: item.str, font: item.fontName, url: url }, textRect);
+        }
         return Object.assign({ text: item.str, font: item.fontName }, textRect);
     });
     const items = mergeItemsArray(words, images);
-    const page = items.sort((a, b) => {
+    const resultPage = items.sort((a, b) => {
         const r = b.y - a.y;
         return (r === 0) ? a.x - b.x : r;
     })
         .reduce((page, item) => page.process(item), new Page());
-    return page;
+    return resultPage;
 }
 exports.processPage = processPage;

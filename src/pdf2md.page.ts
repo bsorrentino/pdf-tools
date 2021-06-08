@@ -6,6 +6,7 @@ import { EnhancedWord, Rect, Word, Image, Font } from "./pdf2md.model";
 import { OPS, Util } from 'pdfjs-dist';
 // doesn't work with parcel
 import type { PDFPageProxy } from 'pdfjs-dist/types/display/api'; 
+import { getLinks, matchLink } from "./pdf2md.link";
 
 
 type TransformationMatrix = [
@@ -222,9 +223,9 @@ function mergeItemsArray(a: Array<Rect>, b: Array<Rect>): Array<Rect> {
 }
 
 // A page which holds PageItems displayable via PdfPageView
-export async function processPage(proxy: PDFPageProxy) {
+export async function processPage(page: PDFPageProxy) {
 
-    const ops = await proxy.getOperatorList()
+    const ops = await page.getOperatorList()
 
     // console.log( 'transform', OPS.transform )
 
@@ -246,7 +247,7 @@ export async function processPage(proxy: PDFPageProxy) {
 
                 let font: Font | null
                 try {
-                    font = proxy.objs.get(fontId) as Font
+                    font = page.objs.get(fontId) as Font
                     if (font)
                         globals.addFont(fontId, font)
                 }
@@ -282,7 +283,7 @@ export async function processPage(proxy: PDFPageProxy) {
                 const imageName = args[0];
 
                 try {
-                    const img = proxy.objs.get(imageName) as PDFImage;
+                    const img = page.objs.get(imageName) as PDFImage;
 
                     // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
                     if (img) {
@@ -304,9 +305,17 @@ export async function processPage(proxy: PDFPageProxy) {
 
                 imageMatrix = null
                 break
+            case OPS.beginAnnotations:
+                // console.trace( 'beginAnnotations', args )
+                break
+            case OPS.endAnnotations:    
+                // console.log( 'endAnnotations', args )
+                break
             case OPS.beginAnnotation:
+                // console.log( 'beginAnnotation', args )
+                break
             case OPS.endAnnotation:
-                console.log( args )
+                // console.log( 'endAnnotation', args )
                 break
             default:
                 break;
@@ -314,11 +323,14 @@ export async function processPage(proxy: PDFPageProxy) {
 
     })
 
+    const links:PDFLink[] = [] // await getLinks( page )
+    // console.log( 'links', links )
+
     const scale = 1.0;
 
-    const viewport = proxy.getViewport({ scale: scale });
+    const viewport = page.getViewport({ scale: scale });
 
-    const textContent = await proxy.getTextContent()
+    const textContent = await page.getTextContent()
 
     const words = textContent.items.map(item => {
 
@@ -338,20 +350,29 @@ export async function processPage(proxy: PDFPageProxy) {
         //console.log( { text: item.str, ...textRect } )
         globals.addTextHeight(textRect.height)
 
-        return <Word>{ text: item.str, font: item.fontName, ...textRect }
+        const url = links.find( lnk => matchLink(textRect,lnk) )?.url
+        
+        if( url ) {
+            console.log( `link '${url} detectd on '${item.str}:'` )
+            return { text: item.str, font: item.fontName, url: url, ...textRect }
+        }
+        
+        return { text: item.str, font: item.fontName, ...textRect }
+
 
     });
 
+    
     const items = mergeItemsArray(words, images)
 
-    const page = items.sort((a, b) => {
+    const resultPage = items.sort((a, b) => {
         const r = b.y - a.y
         return (r === 0) ? a.x - b.x : r
     })
     .reduce((page, item) => page.process(item), new Page())
 
 
-    return page
+    return resultPage
 }
 
 

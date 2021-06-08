@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getLinks = exports.matchLink = void 0;
-const matchLink = (word, link) => (word.x >= link.x1 && word.x + word.width <= link.x2) &&
-    (word.y >= link.y1 && word.y + word.height <= link.y2);
+const matchLink = (rect, link) => (rect.x >= link.x1 && rect.x + rect.width <= link.x2) &&
+    (rect.y >= link.y1 && rect.y + rect.height <= link.y2);
 exports.matchLink = matchLink;
 async function getLinks(page) {
     const annotations = await page.getAnnotations();
