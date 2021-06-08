@@ -1,4 +1,4 @@
-import assert = require('assert')
+import assert from "assert";
 
 import { Enumify } from "enumify";
 import { globals } from './pdf2md.global';

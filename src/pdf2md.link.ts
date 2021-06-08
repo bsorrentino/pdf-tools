@@ -1,4 +1,4 @@
-import { PDFPageProxy } from "pdfjs-dist/types/display/api"
+import type { PDFPageProxy } from 'pdfjs-dist/types/display/api'; 
 import { Word } from "./pdf2md.model"
 
 /**
