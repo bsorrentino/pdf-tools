@@ -1,11 +1,17 @@
-import 'pdfjs-dist/es5/build/pdf.js';
+// import 'pdfjs-dist/es5/build/pdf.js';
+import 'pdfjs-dist/legacy/build/pdf.js';
 import fs from 'fs'
 import { promisify } from 'util'
 import path from 'path';
 
-import { getDocument, OPS, PDFImage } from 'pdfjs-dist'
 import { writePageAsImage, writePageImageOrReuseOneFromCache } from './pdf2md.image';
 import { globals } from './pdf2md.global';
+
+import { program } from 'commander'
+import { assert } from 'console';
+import { pdfToMarkdown } from './pdf2md.main';
+import { getDocument, OPS } from 'pdfjs-dist';
+
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
@@ -121,11 +127,6 @@ async function savePagesAsImages(pdfPath: string) {
   }
 }
 
-// STARTUP CODE
-import { program } from 'commander'
-import { assert } from 'console';
-import { pdfToMarkdown } from './pdf2md.main';
-
 export async function run() {
 
   const choosePath = ( pdfPath:any, cmdobj:any ) => 
@@ -133,7 +134,7 @@ export async function run() {
                             cmdobj.parent.outdir : 
                             path.basename(pdfPath, '.pdf')
 
-  program.version('0.4.0')
+  program.version('0.5.0')
     .name('pdftools')
     .option('-o, --outdir [folder]', 'output folder')
 

@@ -1,8 +1,13 @@
 import assert from "assert";
-import { OPS, PDFImage, PDFPageProxy, Util } from "pdfjs-dist";
 import { globals } from "./pdf2md.global";
 import { writePageImageOrReuseOneFromCache } from "./pdf2md.image";
 import { EnhancedWord, Rect, Word, Image, Font } from "./pdf2md.model";
+
+import { OPS, Util } from 'pdfjs-dist';
+// doesn't work with parcel
+import type { PDFPageProxy } from 'pdfjs-dist/types/display/api'; 
+import { getLinks, matchLink } from "./pdf2md.link";
+
 
 type TransformationMatrix = [
     scalex: number,
@@ -88,8 +93,14 @@ export class Row {
 
     get containsWords() { return this._words !== undefined }
 
+    private get words() {
+        if( !this._words ) 
+            this._words = Array<Word>()
+        return this._words
+    }
+
     addWord( w:Word ) {
-        this._words?.push( w )
+        this.words.push( w )
         this._updateEnhancedText()
     }
 
@@ -153,13 +164,14 @@ export class Page {
         if ('text' in arg) {
             this.processWord(arg as Word)
         }
-        if ('url' in arg) {
+        else if ('url' in arg) {
             this.processImage(arg as Image)
         }
         return this
     }
 
     private processImage(img: Image) {
+
         let si = this.rows.findIndex(row => row.y == img.y)
         //assert(si < 0, `row ${si} already exists! it is not possible add an image`)
         let row: Row
@@ -175,6 +187,7 @@ export class Page {
     }
 
     private processWord(w: Word) {
+
         let si = this.rows.findIndex(row => row.y === w.y)
         let row: Row
         if (si < 0) {
@@ -186,9 +199,9 @@ export class Page {
         }
 
         //assert( s.containsWords, `row ${si} not containing words! is it contain image?` )
-        if (row.containsWords) {
+        //if (row.containsWords) {
             row.addWord(w)
-        }
+        //}
         return this
     }
 
@@ -218,9 +231,9 @@ function mergeItemsArray(a: Array<Rect>, b: Array<Rect>): Array<Rect> {
 }
 
 // A page which holds PageItems displayable via PdfPageView
-export async function processPage(proxy: PDFPageProxy) {
+export async function processPage(page: PDFPageProxy) {
 
-    const ops = await proxy.getOperatorList()
+    const ops = await page.getOperatorList()
 
     // console.log( 'transform', OPS.transform )
 
@@ -242,7 +255,7 @@ export async function processPage(proxy: PDFPageProxy) {
 
                 let font: Font | null
                 try {
-                    font = proxy.objs.get<Font>(fontId)
+                    font = page.objs.get(fontId) as Font
                     if (font)
                         globals.addFont(fontId, font)
                 }
@@ -278,7 +291,7 @@ export async function processPage(proxy: PDFPageProxy) {
                 const imageName = args[0];
 
                 try {
-                    const img = proxy.objs.get<PDFImage>(imageName);
+                    const img = page.objs.get(imageName) as PDFImage;
 
                     // console.log( `${position.x},${position.y},${img?.width},${img?.height}` )
                     if (img) {
@@ -300,17 +313,32 @@ export async function processPage(proxy: PDFPageProxy) {
 
                 imageMatrix = null
                 break
+            case OPS.beginAnnotations:
+                // console.trace( 'beginAnnotations', args )
+                break
+            case OPS.endAnnotations:    
+                // console.log( 'endAnnotations', args )
+                break
+            case OPS.beginAnnotation:
+                // console.log( 'beginAnnotation', args )
+                break
+            case OPS.endAnnotation:
+                // console.log( 'endAnnotation', args )
+                break
             default:
                 break;
         }
 
     })
 
+    const links = await getLinks( page )
+    // console.log( 'links', links )
+
     const scale = 1.0;
 
-    const viewport = proxy.getViewport({ scale: scale });
+    const viewport = page.getViewport({ scale: scale });
 
-    const textContent = await proxy.getTextContent()
+    const textContent = await page.getTextContent()
 
     const words = textContent.items.map(item => {
 
@@ -330,20 +358,23 @@ export async function processPage(proxy: PDFPageProxy) {
         //console.log( { text: item.str, ...textRect } )
         globals.addTextHeight(textRect.height)
 
-        return <Word>{ text: item.str, font: item.fontName, ...textRect }
+        const link = links.find( lnk => matchLink(textRect,lnk) )
+        
+        const text = ( link && link.url ) ? `[${item.str}](${link.url})` : item.str
+
+        return { text: text, font: item.fontName, ...textRect }
 
     });
 
     const items = mergeItemsArray(words, images)
 
-    const page = items.sort((a, b) => {
+    const resultPage = items.sort((a, b) => {
         const r = b.y - a.y
         return (r === 0) ? a.x - b.x : r
     })
     .reduce((page, item) => page.process(item), new Page())
 
-
-    return page
+    return resultPage
 }
 
 

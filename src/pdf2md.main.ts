@@ -1,14 +1,13 @@
-import 'pdfjs-dist/es5/build/pdf.js';
 import fs from 'fs'
 import path from 'path'
 
 import { promisify } from 'util'
 
-import { getDocument } from 'pdfjs-dist'
 
 import { processPage, Page } from './pdf2md.page';
 import { toMarkdown } from './pdf2md.markdown';
 import { globals } from './pdf2md.global';
+import { getDocument } from 'pdfjs-dist';
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
