@@ -37,14 +37,18 @@ class EnhancedWord {
         return result;
     }
     addTransformer(transformer) {
-        if (this._transformer)
-            return false;
-        this._transformer = transformer;
+        const prev = this._transformer;
+        this._transformer = (prev) ?
+            (text) => transformer(prev(text)) :
+            transformer;
     }
     toMarkdown() {
-        const result = (this._transformer) ?
+        const processedResult = (this._transformer) ?
             this._transformer(this.text) : this.text;
-        return (result && pdf2md_global_1.globals.options.debug) ? `<!--${this.font}-->${result}` : result;
+        const result = (processedResult && pdf2md_global_1.globals.options.debug) ?
+            `<!--${this.font}-->${processedResult}` :
+            processedResult;
+        return result;
     }
 }
 exports.EnhancedWord = EnhancedWord;

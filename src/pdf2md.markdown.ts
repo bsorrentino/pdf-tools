@@ -286,7 +286,7 @@ export function toMarkdown(page: Page ) {
             detectHeaders(row )         
             detectFonts( row )
 
-            md = row.enhancedText.reduce((out, etext) => out.concat(etext.toMarkdown()), '')
+            md += row.enhancedText.reduce((out, etext) => out.concat(etext.toMarkdown()), '')
         }
 
         return result.concat(md).concat('\n')

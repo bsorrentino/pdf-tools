@@ -93,8 +93,14 @@ export class Row {
 
     get containsWords() { return this._words !== undefined }
 
+    private get words() {
+        if( !this._words ) 
+            this._words = Array<Word>()
+        return this._words
+    }
+
     addWord( w:Word ) {
-        this._words?.push( w )
+        this.words.push( w )
         this._updateEnhancedText()
     }
 
@@ -158,13 +164,14 @@ export class Page {
         if ('text' in arg) {
             this.processWord(arg as Word)
         }
-        if ('url' in arg) {
+        else if ('url' in arg) {
             this.processImage(arg as Image)
         }
         return this
     }
 
     private processImage(img: Image) {
+
         let si = this.rows.findIndex(row => row.y == img.y)
         //assert(si < 0, `row ${si} already exists! it is not possible add an image`)
         let row: Row
@@ -180,6 +187,7 @@ export class Page {
     }
 
     private processWord(w: Word) {
+
         let si = this.rows.findIndex(row => row.y === w.y)
         let row: Row
         if (si < 0) {
@@ -191,9 +199,9 @@ export class Page {
         }
 
         //assert( s.containsWords, `row ${si} not containing words! is it contain image?` )
-        if (row.containsWords) {
+        //if (row.containsWords) {
             row.addWord(w)
-        }
+        //}
         return this
     }
 
@@ -323,7 +331,7 @@ export async function processPage(page: PDFPageProxy) {
 
     })
 
-    const links:PDFLink[] = [] // await getLinks( page )
+    const links = await getLinks( page )
     // console.log( 'links', links )
 
     const scale = 1.0;
@@ -350,19 +358,14 @@ export async function processPage(page: PDFPageProxy) {
         //console.log( { text: item.str, ...textRect } )
         globals.addTextHeight(textRect.height)
 
-        const url = links.find( lnk => matchLink(textRect,lnk) )?.url
+        const link = links.find( lnk => matchLink(textRect,lnk) )
         
-        if( url ) {
-            console.log( `link '${url} detectd on '${item.str}:'` )
-            return { text: item.str, font: item.fontName, url: url, ...textRect }
-        }
-        
-        return { text: item.str, font: item.fontName, ...textRect }
+        const text = ( link && link.url ) ? `[${item.str}](${link.url})` : item.str
 
+        return { text: text, font: item.fontName, ...textRect }
 
     });
 
-    
     const items = mergeItemsArray(words, images)
 
     const resultPage = items.sort((a, b) => {
@@ -370,7 +373,6 @@ export async function processPage(page: PDFPageProxy) {
         return (r === 0) ? a.x - b.x : r
     })
     .reduce((page, item) => page.process(item), new Page())
-
 
     return resultPage
 }

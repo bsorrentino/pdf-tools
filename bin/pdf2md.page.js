@@ -49,9 +49,13 @@ class Row {
         this._updateEnhancedText();
     }
     get containsWords() { return this._words !== undefined; }
+    get words() {
+        if (!this._words)
+            this._words = Array();
+        return this._words;
+    }
     addWord(w) {
-        var _a;
-        (_a = this._words) === null || _a === void 0 ? void 0 : _a.push(w);
+        this.words.push(w);
         this._updateEnhancedText();
     }
     get containsImages() { return this._images !== undefined; }
@@ -100,7 +104,7 @@ class Page {
         if ('text' in arg) {
             this.processWord(arg);
         }
-        if ('url' in arg) {
+        else if ('url' in arg) {
             this.processImage(arg);
         }
         return this;
@@ -128,9 +132,7 @@ class Page {
         else {
             row = this.rows[si];
         }
-        if (row.containsWords) {
-            row.addWord(w);
-        }
+        row.addWord(w);
         return this;
     }
     insertRow(atIndex, w) {
@@ -210,12 +212,11 @@ async function processPage(page) {
                 break;
         }
     });
-    const links = [];
+    const links = await pdf2md_link_1.getLinks(page);
     const scale = 1.0;
     const viewport = page.getViewport({ scale: scale });
     const textContent = await page.getTextContent();
     const words = textContent.items.map(item => {
-        var _a;
         const tx = pdfjs_dist_1.Util.transform(viewport.transform, item.transform);
         const fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
         const dividedHeight = item.height / fontHeight;
@@ -226,12 +227,9 @@ async function processPage(page) {
             height: Math.round(dividedHeight <= 1 ? item.height : dividedHeight)
         };
         pdf2md_global_1.globals.addTextHeight(textRect.height);
-        const url = (_a = links.find(lnk => pdf2md_link_1.matchLink(textRect, lnk))) === null || _a === void 0 ? void 0 : _a.url;
-        if (url) {
-            console.log(`link '${url} detectd on '${item.str}:'`);
-            return Object.assign({ text: item.str, font: item.fontName, url: url }, textRect);
-        }
-        return Object.assign({ text: item.str, font: item.fontName }, textRect);
+        const link = links.find(lnk => pdf2md_link_1.matchLink(textRect, lnk));
+        const text = (link && link.url) ? `[${item.str}](${link.url})` : item.str;
+        return Object.assign({ text: text, font: item.fontName }, textRect);
     });
     const items = mergeItemsArray(words, images);
     const resultPage = items.sort((a, b) => {
