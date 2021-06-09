@@ -1,7 +1,7 @@
-import 'pdfjs-dist/es5/build/pdf.js';
+import 'pdfjs-dist/legacy/build/pdf.js';
 import path from 'path'
 import { getDocument, Util } from 'pdfjs-dist';
-import { PDFPageProxy } from 'pdfjs-dist/types/display/api';
+import type { PDFPageProxy } from 'pdfjs-dist/types/display/api';
 import { getLinks, matchLink } from '../pdf2md.link';
 import { Word } from '../pdf2md.model';
 

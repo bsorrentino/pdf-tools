@@ -19,7 +19,6 @@ export interface Image extends Rect {
 export interface Word extends Rect {
     text: string
     font: string
-
 }
 
 export interface ItemTransformer<T> {
@@ -37,6 +36,7 @@ export class EnhancedWord implements Word {
     height: number
     text: string
     font: string
+    link?:PDFLink
 
     private _transformer?: TextTransformer
 
@@ -81,9 +81,8 @@ export class EnhancedWord implements Word {
     }
 
     addTransformer(transformer: TextTransformer) {
-        if (this._transformer) return false // GUARD
-
-        this._transformer = transformer
+        // if (this._transformer) return false // GUARD
+        // this._transformer = transformer
 
         ////////////////////////////////////
         // SUPPORT TRANSFORMER DEBUG
@@ -99,18 +98,25 @@ export class EnhancedWord implements Word {
         // SUPPORT TRANSFORMER CHAIN
         ////////////////////////////////////
 
-        // const prev = this._transformer
-        // this._transformer =  ( prev ) ?
-        //     ( text:string ) => transformer(prev(text)) :
-        //     transformer
+        const prev = this._transformer
+        this._transformer =  ( prev ) ?
+            ( text:string ) => transformer( prev(text) ) :
+            transformer
         
     }
     
     toMarkdown() {
-        const result = (this._transformer) ? 
+
+        const processedResult = (this._transformer) ? 
                     this._transformer(this.text) : this.text
 
-        return (result && globals.options.debug) ? `<!--${this.font}-->${result}` : result
+        const result = (processedResult && globals.options.debug) ? 
+                                `<!--${this.font}-->${processedResult}` : 
+                                processedResult
+
+        // console.log( `toMarkdown:\n\t${this.text}\n\t${result}`)
+
+        return result
     }
 
 }

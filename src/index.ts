@@ -1,4 +1,5 @@
-import 'pdfjs-dist/es5/build/pdf.js';
+// import 'pdfjs-dist/es5/build/pdf.js';
+import 'pdfjs-dist/legacy/build/pdf.js';
 import fs from 'fs'
 import { promisify } from 'util'
 import path from 'path';
@@ -10,7 +11,6 @@ import { program } from 'commander'
 import { assert } from 'console';
 import { pdfToMarkdown } from './pdf2md.main';
 import { getDocument, OPS } from 'pdfjs-dist';
-
 
 
 // Some PDFs need external cmaps.

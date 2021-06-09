@@ -1,5 +1,3 @@
-/// <reference types="pdfjs-dist" />
-
 //
 // extend third-party declaration files
 //
@@ -7,6 +5,7 @@
 //
 // refer to 'Module Augmentation'  https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
 //
+
 //declare module "pdfjs-dist" {
 
     // declare enum PDFImageKind {
@@ -18,7 +17,7 @@
     // interface PDFJSUtilStatic {
     //     transform( t1:any, t2:any ):number[4]
     // }
-    
+   
    declare interface PDFImage  {
         width:number
         height:number
@@ -93,4 +92,5 @@
         y2:number
         url?:string
     }
+
 //}

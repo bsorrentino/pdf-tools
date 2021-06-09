@@ -5,7 +5,7 @@ import path from 'path'
 import { promisify } from 'util'
 import Jimp from 'jimp'
 import { globals } from "./pdf2md.global"
-import { PDFPageProxy } from "pdfjs-dist/types/display/api"
+import type { PDFPageProxy } from "pdfjs-dist/types/display/api"
 
 enum PDFImageKind {
     GRAYSCALE_1BPP = 1,

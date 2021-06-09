@@ -1,15 +1,15 @@
-import { PDFPageProxy } from "pdfjs-dist/types/display/api"
-import { Word } from "./pdf2md.model"
+import type { PDFPageProxy } from 'pdfjs-dist/types/display/api'; 
+import { Rect } from "./pdf2md.model"
 
 /**
  * 
- * @param word 
+ * @param rect 
  * @param link 
  * @returns 
  */
-export const matchLink = (word:Word, link:PDFLink) => 
-  (word.x >= link.x1 && word.x + word.width <= link.x2) &&
-  (word.y >= link.y1 && word.y + word.height <= link.y2)
+export const matchLink = <T extends Rect>(rect:T, link:PDFLink) => 
+  (rect.x >= link.x1 && rect.x + rect.width <= link.x2) &&
+  (rect.y >= link.y1 && rect.y + rect.height <= link.y2)
 
 /**
  * 

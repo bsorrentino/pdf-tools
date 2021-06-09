@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 parcelRequire=function(e,r,t,n){var i,o="function"==typeof parcelRequire&&parcelRequire,u="function"==typeof require&&require;function f(t,n){if(!r[t]){if(!e[t]){var i="function"==typeof parcelRequire&&parcelRequire;if(!n&&i)return i(t,!0);if(o)return o(t,!0);if(u&&"string"==typeof t)return u(t);var c=new Error("Cannot find module '"+t+"'");throw c.code="MODULE_NOT_FOUND",c}p.resolve=function(r){return e[t][1][r]||r},p.cache={};var l=r[t]=new f.Module(t);e[t][0].call(l.exports,p,l,l.exports,this)}return r[t].exports;function p(e){return f(p.resolve(e))}}f.isParcelRequire=!0,f.Module=function(e){this.id=e,this.bundle=f,this.exports={}},f.modules=e,f.cache=r,f.parent=o,f.register=function(r,t){e[r]=[function(e,r){r.exports=t},{}]};for(var c=0;c<t.length;c++)try{f(t[c])}catch(e){i||(i=e)}if(t.length){var l=f(t[t.length-1]);"object"==typeof exports&&"undefined"!=typeof module?module.exports=l:"function"==typeof define&&define.amd?define(function(){return l}):n&&(this[n]=l)}if(parcelRequire=f,i)throw i;return f}({"FrYy":[function(require,module,exports) {
 "use strict";var t=this&&this.__importDefault||function(t){return t&&t.__esModule?t:{default:t}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.globals=void 0;const e=require("assert"),s=t(require("path")),r=t(require("fs")),i=require("util"),o=i.promisify(r.default.access),n=i.promisify(r.default.readFile),a=i.promisify(r.default.writeFile);class c{constructor(){this._fontMap=new Map,this._textHeights=new Map,this._imageUrlPrefix=process.env.IMAGE_URL||"",this._options={filler:!1,debug:!1,stats:!1},this._stats=null,this.outDir=s.default.join(process.cwd(),"out")}get useImageDuplicateDetection(){return!0}get options(){return this._options}addFont(t,s){e(s,`font ${t} is not valid ${s}`);let r=this._fontMap.get(t)||Object.assign(Object.assign({},s),{occurrence:0});r.occurrence++,this._fontMap.set(t,r)}getFont(t){return this._fontMap.get(t)}getFontIdByName(t){for(const[e,s]of this._fontMap.entries())if(s.name==t)return e}addTextHeight(t){let e=this._textHeights.get(t)||0;this._textHeights.set(t,++e)}get stats(){if(!this._stats){const t=()=>{const[t,e]=Array.from(this._fontMap.entries()).reduce(([t,e],[s,r])=>r.occurrence>e.occurrence?[s,r]:[t,e],["",{occurrence:0}]);return t},e=()=>Array.from(this._textHeights.keys()).reduce((t,e)=>e>t?e:t),s=()=>{const[t,e]=Array.from(this._textHeights.entries()).reduce(([t,e],[s,r])=>r>e?[s,r]:[t,e],[0,-1]);return t};this._stats={maxTextHeight:e(),maxHeightFont:null,mostUsedFont:t(),mostUsedTextHeight:s(),textHeigths:Array.from(this._textHeights.keys()).sort((t,e)=>e-t),mostUsedTextDistanceY:-1}}return this._stats}async loadLocalFonts(t){try{await o(t)}catch(e){return void console.warn(`WARN: file ${t} doesn't exists!`)}try{const s=await n(t),r=JSON.parse(s.toString());Object.entries(r).forEach(([t,e])=>this.addFont(t,e))}catch(e){console.warn(`WARN: error loading and evaluating ${t}! - ${e.message}`)}}async saveFonts(t){try{return await o(t),void console.warn(`WARN: file ${t} already exists!`)}catch(e){}try{const s={},r=Array.from(this._fontMap.entries()).sort((t,e)=>t[1].occurrence-e[1].occurrence).reduce((t,e)=>(t[e[0]]=e[1],t),s);await a(t,JSON.stringify(r))}catch(e){console.warn(`WARN: error writing ${t}! - ${e.message}`)}}get imageUrlPrefix(){return this._imageUrlPrefix}set imageUrlPrefix(t){t&&0!==t.trim().length&&(this._imageUrlPrefix=t.endsWith("/")?t:t.concat("/"))}consoleLog(){const t=[Object.assign(Object.assign({},this.stats),{textHeigths:JSON.stringify(this.stats.textHeigths)})];console.table(t)}}exports.globals=new c;
 },{}],"K2lX":[function(require,module,exports) {
@@ -14,3 +15,119 @@ parcelRequire=function(e,r,t,n){var i,o="function"==typeof parcelRequire&&parcel
 "use strict";var a=this&&this.__importDefault||function(a){return a&&a.__esModule?a:{default:a}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.run=void 0,require("pdfjs-dist/es5/build/pdf.js");const e=a(require("fs")),t=require("util"),r=a(require("path")),i=require("./pdf2md.image"),o=require("./pdf2md.global"),s=require("commander"),n=require("console"),d=require("./pdf2md.main"),p=require("pdfjs-dist"),c="../../../node_modules/pdfjs-dist/cmaps/",l=!0,u=t.promisify(e.default.readFile),f=t.promisify(e.default.access),g=t.promisify(e.default.mkdir);async function m(a){n.assert(a,"provided path is not valid");try{await f(a)}catch(e){console.log(`folder ${a} doesn't exist, try to create`),await g(a)}return a}async function w(a){try{const t=new Uint8Array(await u(a)),r=await p.getDocument({data:t,cMapUrl:c,cMapPacked:l}).promise,o=r.numPages;for(let a=1;a<=o;a++){const e=await r.getPage(a),t=await e.getOperatorList();for(let a=0;a<t.fnArray.length;a++)if(t.fnArray[a]==p.OPS.paintJpegXObject||t.fnArray[a]==p.OPS.paintImageXObject){const r=t.argsArray[a][0],o=e.objs.get(r);await i.writePageImageOrReuseOneFromCache(o,r)}}}catch(e){console.log(e)}}async function y(a){try{const t=new Uint8Array(await u(a)),r=await p.getDocument({data:t,cMapUrl:c,cMapPacked:l}).promise,o=r.numPages;for(let a=1;a<=o;a++){const e=await r.getPage(a);await i.writePageAsImage(e)}}catch(e){console.log(e)}}async function b(){const a=(a,e)=>e.parent.outdir?e.parent.outdir:r.default.basename(a,".pdf");return s.program.version("0.4.0").name("pdftools").option("-o, --outdir [folder]","output folder"),s.program.command("pdfximages <pdf>").description("extract images (as png) from pdf and save it to the given folder").alias("pxi").action(async(e,t)=>(o.globals.outDir=await m(a(e,t)),w(e))),s.program.command("pdf2images <pdf>").description("create an image (as png) for each pdf page").alias("p2i").action(async(e,t)=>(o.globals.outDir=await m(a(e,t)),y(e))),s.program.command("pdf2md <pdf>").description("convert pdf to markdown format.").alias("p2md").option("--imageurl [url prefix]","imgage url prefix").option("--stats","print stats information").option("--debug","print debug information").action(async(e,t)=>{o.globals.outDir=await m(a(e,t)),t.imageurl&&(o.globals.imageUrlPrefix=t.imageurl),o.globals.options.debug=t.debug,o.globals.options.stats=t.stats,await d.pdfToMarkdown(e)}),await s.program.parseAsync(process.argv)}exports.run=b;
 },{"./pdf2md.image":"K2lX","./pdf2md.global":"FrYy","./pdf2md.main":"OTOl"}]},{},["QCba"], null)
 //# sourceMappingURL=/index.js.map
+=======
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.run = void 0;
+require("pdfjs-dist/legacy/build/pdf.js");
+const fs_1 = __importDefault(require("fs"));
+const util_1 = require("util");
+const path_1 = __importDefault(require("path"));
+const pdf2md_image_1 = require("./pdf2md.image");
+const pdf2md_global_1 = require("./pdf2md.global");
+const commander_1 = require("commander");
+const console_1 = require("console");
+const pdf2md_main_1 = require("./pdf2md.main");
+const pdfjs_dist_1 = require("pdfjs-dist");
+const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
+const CMAP_PACKED = true;
+const readFile = util_1.promisify(fs_1.default.readFile);
+const checkFileExistsAsync = util_1.promisify(fs_1.default.access);
+const mkdirAsync = util_1.promisify(fs_1.default.mkdir);
+async function createFolderIfDoesntExist(path) {
+    console_1.assert(path, `provided path is not valid`);
+    try {
+        await checkFileExistsAsync(path);
+    }
+    catch (e) {
+        console.log(`folder ${path} doesn't exist, try to create`);
+        await mkdirAsync(path);
+    }
+    return path;
+}
+async function extractImagesfromPages(pdfPath) {
+    try {
+        const data = new Uint8Array(await readFile(pdfPath));
+        const pdfDocument = await pdfjs_dist_1.getDocument({
+            data: data,
+            cMapUrl: CMAP_URL,
+            cMapPacked: CMAP_PACKED,
+        }).promise;
+        const pages = pdfDocument.numPages;
+        for (let i = 1; i <= pages; i++) {
+            const page = await pdfDocument.getPage(i);
+            const ops = await page.getOperatorList();
+            for (let j = 0; j < ops.fnArray.length; j++) {
+                if (ops.fnArray[j] == pdfjs_dist_1.OPS.paintJpegXObject || ops.fnArray[j] == pdfjs_dist_1.OPS.paintImageXObject) {
+                    const op = ops.argsArray[j][0];
+                    const img = page.objs.get(op);
+                    await pdf2md_image_1.writePageImageOrReuseOneFromCache(img, op);
+                }
+            }
+        }
+    }
+    catch (reason) {
+        console.log(reason);
+    }
+}
+async function savePagesAsImages(pdfPath) {
+    try {
+        const data = new Uint8Array(await readFile(pdfPath));
+        const pdfDocument = await pdfjs_dist_1.getDocument({
+            data: data,
+            cMapUrl: CMAP_URL,
+            cMapPacked: CMAP_PACKED,
+        }).promise;
+        const pages = pdfDocument.numPages;
+        for (let i = 1; i <= pages; i++) {
+            const page = await pdfDocument.getPage(i);
+            await pdf2md_image_1.writePageAsImage(page);
+        }
+    }
+    catch (reason) {
+        console.log(reason);
+    }
+}
+async function run() {
+    const choosePath = (pdfPath, cmdobj) => (cmdobj.parent.outdir) ?
+        cmdobj.parent.outdir :
+        path_1.default.basename(pdfPath, '.pdf');
+    commander_1.program.version('0.4.0')
+        .name('pdftools')
+        .option('-o, --outdir [folder]', 'output folder');
+    commander_1.program.command('pdfximages <pdf>')
+        .description('extract images (as png) from pdf and save it to the given folder')
+        .alias('pxi')
+        .action(async (pdfPath, cmdobj) => {
+        pdf2md_global_1.globals.outDir = await createFolderIfDoesntExist(choosePath(pdfPath, cmdobj));
+        return extractImagesfromPages(pdfPath);
+    });
+    commander_1.program.command('pdf2images <pdf>')
+        .description('create an image (as png) for each pdf page')
+        .alias('p2i')
+        .action(async (pdfPath, cmdobj) => {
+        pdf2md_global_1.globals.outDir = await createFolderIfDoesntExist(choosePath(pdfPath, cmdobj));
+        return savePagesAsImages(pdfPath);
+    });
+    commander_1.program.command('pdf2md <pdf>')
+        .description('convert pdf to markdown format.')
+        .alias('p2md')
+        .option('--imageurl [url prefix]', 'imgage url prefix')
+        .option('--stats', 'print stats information')
+        .option('--debug', 'print debug information')
+        .action(async (pdfPath, cmdobj) => {
+        pdf2md_global_1.globals.outDir = await createFolderIfDoesntExist(choosePath(pdfPath, cmdobj));
+        if (cmdobj.imageurl) {
+            pdf2md_global_1.globals.imageUrlPrefix = cmdobj.imageurl;
+        }
+        pdf2md_global_1.globals.options.debug = cmdobj.debug;
+        pdf2md_global_1.globals.options.stats = cmdobj.stats;
+        await pdf2md_main_1.pdfToMarkdown(pdfPath);
+    });
+    return await commander_1.program.parseAsync(process.argv);
+}
+exports.run = run;
+>>>>>>> feature/link

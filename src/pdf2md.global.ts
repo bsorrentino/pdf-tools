@@ -1,4 +1,4 @@
-import assert = require('assert')
+import assert from "assert";
 import path from 'path'
 import fs from 'fs'
 import { promisify } from 'util'
