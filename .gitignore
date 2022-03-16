@@ -5,7 +5,7 @@
 node_modules/
 
 # parcel
-# bin/
+bin/
 .cache/
 .parcel-cache/
 

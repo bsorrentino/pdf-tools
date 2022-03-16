@@ -6,12 +6,16 @@
   "bin": {
     "pdftools": "./cli.js"
   },
+  "files": [
+    "bin"
+  ],
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "clean": "./zx-clean.mjs"
   },
   "author": "bsorrentino <bartolomeo.sorrentino@gmail.com> (http://soulsoftware-bsc.blogspot.it/)",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "canvas": "^2.6.1",
     "commander": "^6.2.0",
@@ -23,11 +27,25 @@
     "@types/jest": "^26.0.22",
     "@types/node": "^10.17.44",
     "@types/pdfjs-dist": "^2.7.1",
+    "cz-conventional-changelog": "^3.3.0",
     "jest": "^26.6.3",
+    "standard-version": "^9.3.2",
     "ts-jest": "^26.5.5",
-    "typescript": "^4.0.5"
+    "typescript": "^4.0.5",
+    "zx": "^6.0.1"
   },
   "engines": {
-    "node": "14"
+    "node": ">=14"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "standard-version": {
+    "skip": {
+      "tag": true
+    }
   }
+
 }

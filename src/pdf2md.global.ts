@@ -146,7 +146,7 @@ class Globals {
             Object.entries(fonts).forEach(([k, v]) => this.addFont(k, v))
 
         }
-        catch (e) {
+        catch (e:any) {
             console.warn(`WARN: error loading and evaluating ${fontsFile}! - ${e.message}`)
         }
     }
@@ -177,7 +177,7 @@ class Globals {
             await writeFileAsync(fontsFile, JSON.stringify(contents) )
 
         }
-        catch (e) {
+        catch (e:any) {
             console.warn(`WARN: error writing ${fontsFile}! - ${e.message}`)
         }
     }
