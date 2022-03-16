@@ -12,7 +12,6 @@ import { assert } from 'console';
 import { pdfToMarkdown } from './pdf2md.main';
 import { getDocument, OPS } from 'pdfjs-dist';
 
-
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
@@ -134,7 +133,9 @@ export async function run() {
                             cmdobj.parent.outdir : 
                             path.basename(pdfPath, '.pdf')
 
-  program.version('0.5.0')
+    const {version} = require('../package.json')
+  
+    program.version( version )
     .name('pdftools')
     .option('-o, --outdir [folder]', 'output folder')
 
