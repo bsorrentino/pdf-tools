@@ -7,11 +7,15 @@ import { promisify } from 'util'
 import { processPage, Page } from './pdf2md.page';
 import { toMarkdown } from './pdf2md.markdown';
 import { globals } from './pdf2md.global';
-import { getDocument } from 'pdfjs-dist';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.js'
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
+
+// Where the standard fonts are located.
+const STANDARD_FONT_DATA_URL =
+  "../../../node_modules/pdfjs-dist/standard_fonts/";
 
 const readFile = promisify(fs.readFile)
 const writeFile = promisify(fs.writeFile)
@@ -37,7 +41,8 @@ export async function pdfToMarkdown(pdfPath: string) {
     const pdfDocument = await getDocument({
       data: data,
       cMapUrl: CMAP_URL,
-      cMapPacked: CMAP_PACKED
+      cMapPacked: CMAP_PACKED,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL
     }).promise
 
     const numPages = pdfDocument.numPages
