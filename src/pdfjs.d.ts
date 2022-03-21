@@ -85,7 +85,7 @@
 
     }    
 
-    type PDFLink = {
+    declare type PDFLink = {
         x1:number
         y1:number
         x2:number
