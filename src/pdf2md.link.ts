@@ -1,4 +1,5 @@
-import type { PDFPageProxy } from 'pdfjs-dist/types/display/api'; 
+
+import { PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.js'
 import { Rect } from "./pdf2md.model"
 
 /**

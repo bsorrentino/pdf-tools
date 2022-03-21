@@ -3,10 +3,10 @@ import { globals } from "./pdf2md.global";
 import { writePageImageOrReuseOneFromCache } from "./pdf2md.image";
 import { EnhancedWord, Rect, Word, Image, Font } from "./pdf2md.model";
 
-import { OPS, Util } from 'pdfjs-dist';
+import { OPS, PDFPageProxy, Util } from 'pdfjs-dist/legacy/build/pdf.js'
 // doesn't work with parcel
-import type { PDFPageProxy } from 'pdfjs-dist/types/display/api'; 
 import { getLinks, matchLink } from "./pdf2md.link";
+import { TextItem } from "pdfjs-dist/types/src/display/api";
 
 
 type TransformationMatrix = [
@@ -340,7 +340,11 @@ export async function processPage(page: PDFPageProxy) {
 
     const textContent = await page.getTextContent()
 
-    const words = textContent.items.map(item => {
+    const words = textContent.items
+        .filter( (item:any) => item.transform!==undefined )
+        .map( (item:any) => {
+        
+        item = item as TextItem
 
         const tx = Util.transform(viewport.transform, item.transform)
 

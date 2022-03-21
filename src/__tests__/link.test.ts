@@ -1,12 +1,22 @@
-import 'pdfjs-dist/legacy/build/pdf.js';
+/**
+ * @link: https://github.com/mozilla/pdf.js/blob/master/examples/node/pdf2png/pdf2png.js
+ */
+/// <reference path="../pdfjs.d.ts" />
+
 import path from 'path'
-import { getDocument, Util } from 'pdfjs-dist';
-import type { PDFPageProxy } from 'pdfjs-dist/types/display/api';
+import { getDocument, Util, PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.js';
 import { getLinks, matchLink } from '../pdf2md.link';
 import { Word } from '../pdf2md.model';
+import { TextItem } from 'pdfjs-dist/types/src/display/api';
+// import { DH_CHECK_P_NOT_PRIME } from 'constants';
 
+// Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
+
+// Where the standard fonts are located.
+const STANDARD_FONT_DATA_URL =
+  "../../../node_modules/pdfjs-dist/standard_fonts/";
 
 async function getText(page:PDFPageProxy):Promise<Word[]> {
     const scale = 1.0;
@@ -15,7 +25,11 @@ async function getText(page:PDFPageProxy):Promise<Word[]> {
 
     const textContent = await page.getTextContent()
 
-    const words = textContent.items.map(item => {
+    const words = textContent.items
+        .filter( (item:any) => item.transform!==undefined )
+        .map( (item:any) => {
+        
+        item = item as TextItem
 
         const tx = Util.transform(viewport.transform, item.transform)
 
@@ -37,38 +51,42 @@ async function getText(page:PDFPageProxy):Promise<Word[]> {
     return words
 }
 
-test( 'parse link', () => {
+type WorkWithLinkTuple = [Word,PDFLink|undefined]
 
-    return getDocument({
+test( 'parse link', async () => {
+
+    const doc = await getDocument({
         url: path.join( 'samples', 'article-with-links.pdf'),
         cMapUrl: CMAP_URL,
         cMapPacked: CMAP_PACKED,
-      }).promise
-        .then( doc => {        
-            expect(doc).not.toBeNull()
-            expect(doc.numPages).toEqual(9)        
-            return doc.getPage(1)
-        .then( page => {
-            expect(page).not.toBeUndefined()
-            expect(page).not.toBeNull()
+        standardFontDataUrl: STANDARD_FONT_DATA_URL
+    }).promise
+
+
+    expect(doc).not.toBeNull()
+    expect(doc.numPages).toEqual(9)        
+
+    const page = await doc.getPage(1)
+
+    expect(page).not.toBeUndefined()
+    expect(page).not.toBeNull()
             
-            return Promise.all( [getText(page), getLinks(page)] )
-        }).then( ( [words, links] ) => {
-            // console.log( 'words', words )
-            expect(links?.length).toEqual(2)
+    const [words, links] = await Promise.all( [getText(page), getLinks(page)] )
 
-            const dataverseWord = words.find( word => word.text.localeCompare('Dataverse')==0  )
-            expect(dataverseWord).not.toBeNull()
+    expect(links?.length).toEqual(2)
 
-            const workdwithlink = words.map( word => {
+    const dataverseWord = words.find( word => word.text.localeCompare('Dataverse')==0  )
+    expect(dataverseWord).not.toBeNull()
+
+    const workdwithlink = 
+            words.map<WorkWithLinkTuple>( word => {
                     const result = links.find( link => matchLink( word, link ))
-                    return [word, result ]
-                }).filter( ([ word, link ] ) => link!=null )
+                    return [word, result] 
+                })
+                .filter( ([ _, link ] ) => link!=null )
 
-            // console.log( workdwithlink )
-            expect(workdwithlink?.length).toEqual(4)        
+    workdwithlink.forEach( lnk => console.log( 'workdwithlink', lnk) )
+    // console.log( workdwithlink )
+    expect(workdwithlink.length).toEqual(7)        
 
-        })
-        
-      })
 })

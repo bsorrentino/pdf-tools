@@ -1,5 +1,3 @@
-// import 'pdfjs-dist/es5/build/pdf.js';
-import 'pdfjs-dist/legacy/build/pdf.js';
 import fs from 'fs'
 import { promisify } from 'util'
 import path from 'path';
@@ -10,11 +8,15 @@ import { globals } from './pdf2md.global';
 import { program } from 'commander'
 import { assert } from 'console';
 import { pdfToMarkdown } from './pdf2md.main';
-import { getDocument, OPS } from 'pdfjs-dist';
+import { getDocument, OPS } from 'pdfjs-dist/legacy/build/pdf.js'
 
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
+
+// Where the standard fonts are located.
+const STANDARD_FONT_DATA_URL =
+  "../../../node_modules/pdfjs-dist/standard_fonts/";
 
 const readFile = promisify(fs.readFile)
 const checkFileExistsAsync = promisify(fs.access)
@@ -105,6 +107,7 @@ async function savePagesAsImages(pdfPath: string) {
       data: data,
       cMapUrl: CMAP_URL,
       cMapPacked: CMAP_PACKED,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL
     }).promise
 
     // const metadata = await pdfDocument.getMetadata()
@@ -129,7 +132,7 @@ async function savePagesAsImages(pdfPath: string) {
 export async function run() {
 
   const choosePath = ( pdfPath:any, cmdobj:any ) => 
-              ( cmdobj.parent.outdir ) ? 
+              ( cmdobj.parent?.outdir ) ? 
                             cmdobj.parent.outdir : 
                             path.basename(pdfPath, '.pdf')
 
@@ -137,7 +140,7 @@ export async function run() {
   
     program.version( version )
     .name('pdftools')
-    .option('-o, --outdir [folder]', 'output folder')
+    .option('-o, --outdir [folder]', 'output folder' )
 
     program.command('pdfximages <pdf>')
       .description('extract images (as png) from pdf and save it to the given folder')
