@@ -48,4 +48,14 @@
     {{/commits}}
 {{/ifContainsType}}
 
+{{#ifContainsType commits type='build'}}
+### ALM 
+
+    {{#commits}}
+      {{#ifCommitType . type='build'}}
+ - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://gitlab.com/html-validate/html-validate/commit/{{hashFull}}))
+      {{/ifCommitType}}
+    {{/commits}}
+{{/ifContainsType}}
+
 {{/tags}}
