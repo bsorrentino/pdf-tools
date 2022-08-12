@@ -14,7 +14,7 @@ Tools to extract/transform data from PDF
 ## Installation
 
 ```
-npm install pdf-tools -g
+npm install @bsorrentino/pdf-tools -g
 ```
 
 ## Requirements
