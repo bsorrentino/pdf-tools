@@ -6,8 +6,19 @@
 
 
 
+
+
+
+
+"name: v1.0.2" is a release tag
+
+## [v1.0.2](https://gitlab.com/html-validate/html-validate/compare/v1.0.2) (2022-08-12)
+
+
+
 ### Documentation
 
+ -  update changelog template ([f6a41269349d4e0](https://gitlab.com/html-validate/html-validate/commit/f6a41269349d4e01832c8ee800142899f95ca3f7))
  -  update readme ([5f17d3e9348a200](https://gitlab.com/html-validate/html-validate/commit/5f17d3e9348a20063d16b8840304b3ee116c281b))
 
 
