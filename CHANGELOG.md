@@ -1,8 +1,9 @@
 # Changelog
 
 
+"name: v1.1.0" is a release tag
 
-## [Unreleased](https://github.com/bsorrentino/pdf-tools/releases/tag/Unreleased) ()
+## [v1.1.0](https://github.com/bsorrentino/pdf-tools/releases/tag/v1.1.0) (2023-05-20)
 
 ### Features
 
@@ -13,12 +14,20 @@
 
 ### Documentation
 
+ -  **CHANGELOG.md**  update ([a7be400ebbc7fa9](https://github.com/bsorrentino/pdf-tools/commit/a7be400ebbc7fa9a119e5a3e9f9d8c75f70f6251))
+
  -  update changelog template ([16281aca47a4a38](https://github.com/bsorrentino/pdf-tools/commit/16281aca47a4a38d6c33c3aa6ee462be202a3ec2))
 
  -  **README.md**  update ([63e8702a39bfe33](https://github.com/bsorrentino/pdf-tools/commit/63e8702a39bfe3320f2a588e25f20b4368bcbb61))
      > add option to enable page separator
      > issue #6
 
+ -  update changelog ([f665d3ef54917b9](https://github.com/bsorrentino/pdf-tools/commit/f665d3ef54917b95dcd57bae0cf250cae9889437))
+
+
+### Refactor
+
+ -  upgrade pdf-dist version, build on nodejs 16 and test also on macos M1 ([91952e262b18918](https://github.com/bsorrentino/pdf-tools/commit/91952e262b189185068c2fe8e3bf46de942ca811))
 
 
 ### ALM 
@@ -28,6 +37,8 @@
      > issue #6
 
  -  **package.json**  move to next release ([bf4d30b4c46ed7f](https://github.com/bsorrentino/pdf-tools/commit/bf4d30b4c46ed7f5a240d4aabb0fd8c6a43a024c))
+
+ -  configure standard-version changelog template ([e29d8b6153b9db4](https://github.com/bsorrentino/pdf-tools/commit/e29d8b6153b9db47b489585930d89d3167810cf6))
 
 
 
@@ -71,19 +82,7 @@
 
 
 
-### Documentation
 
- -  update changelog ([f665d3ef54917b9](https://github.com/bsorrentino/pdf-tools/commit/f665d3ef54917b95dcd57bae0cf250cae9889437))
-
-
-### Refactor
-
- -  upgrade pdf-dist version, build on nodejs 16 and test also on macos M1 ([91952e262b18918](https://github.com/bsorrentino/pdf-tools/commit/91952e262b189185068c2fe8e3bf46de942ca811))
-
-
-### ALM 
-
- -  configure standard-version changelog template ([e29d8b6153b9db4](https://github.com/bsorrentino/pdf-tools/commit/e29d8b6153b9db47b489585930d89d3167810cf6))
 
 
 
