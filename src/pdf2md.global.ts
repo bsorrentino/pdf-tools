@@ -30,9 +30,10 @@ class Globals {
     private _options = {
         filler: false,
         debug: false,
-        stats: false
+        stats: false,
     }
 
+    pageSeparator?: string
     outDir: string
 
     get useImageDuplicateDetection() { return true }

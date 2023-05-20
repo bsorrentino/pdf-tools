@@ -1,6 +1,6 @@
 {
   "name": "@bsorrentino/pdf-tools",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "",
   "main": "index.js",
   "bin": {
@@ -19,7 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "canvas": "^2.9.1",
-    "commander": "^9.1.0",
+    "commander": "^10.0.1",
     "enumify": "^2.0.0",
     "jimp": "^0.16.1",
     "pdfjs-dist": "^2.13.216"
@@ -34,50 +34,5 @@
   },
   "engines": {
     "node": ">=16"
-  },
-  "standard-version": {
-    "skip": {
-      "tag": true
-    },
-    "types": [
-      {
-        "type": "feat",
-        "section": "Features"
-      },
-      {
-        "type": "fix",
-        "section": "Bug Fixes"
-      },
-      {
-        "type": "chore",
-        "hidden": true
-      },
-      {
-        "type": "docs",
-        "section": "Documentation"
-      },
-      {
-        "type": "style",
-        "hidden": true
-      },
-      {
-        "type": "refactor",
-        "section": "Refactoring"
-      },
-      {
-        "type": "perf",
-        "hidden": true
-      },
-      {
-        "type": "test",
-        "hidden": true
-      },
-      {
-        "type": "build",
-        "section": "Build"
-      }
-    ],
-    "commitUrlFormat": "https://github.com/mokkapps/changelog-generator-demo/commits/{{hash}}",
-    "compareUrlFormat": "https://github.com/mokkapps/changelog-generator-demo/compare/{{previousTag}}...{{currentTag}}"
   }
 }
