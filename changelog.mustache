@@ -6,14 +6,18 @@
 "{{.}}" is a release tag
 {{/ifReleaseTag}}
 
-## [{{name}}](https://gitlab.com/html-validate/html-validate/compare/{{name}}) ({{tagDate .}})
+## [{{name}}](https://github.com/bsorrentino/pdf-tools/releases/tag/{{name}}) ({{tagDate .}})
 
 {{#ifContainsType commits type='feat'}}
 ### Features
 
     {{#commits}}
       {{#ifCommitType . type='feat'}}
- - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://gitlab.com/html-validate/html-validate/commit/{{hashFull}}))
+ * {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://github.com/bsorrentino/pdf-tools/commit/{{hashFull}}))
+   {{#messageBodyItems}} 
+     > {{.}}
+   {{/messageBodyItems}}
+   
       {{/ifCommitType}}
     {{/commits}}
 {{/ifContainsType}}
@@ -23,7 +27,11 @@
 
     {{#commits}}
       {{#ifCommitType . type='fix'}}
- - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://gitlab.com/html-validate/html-validate/commit/{{hashFull}}))
+ - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://github.com/bsorrentino/pdf-tools/commit/{{hashFull}}))
+   {{#messageBodyItems}} 
+     > {{.}}
+   {{/messageBodyItems}}
+
       {{/ifCommitType}}
     {{/commits}}
 {{/ifContainsType}}
@@ -33,7 +41,11 @@
 
     {{#commits}}
       {{#ifCommitType . type='docs'}}
- - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://gitlab.com/html-validate/html-validate/commit/{{hashFull}}))
+ - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://github.com/bsorrentino/pdf-tools/commit/{{hashFull}}))
+   {{#messageBodyItems}} 
+     > {{.}}
+   {{/messageBodyItems}}
+
       {{/ifCommitType}}
     {{/commits}}
 {{/ifContainsType}}
@@ -43,7 +55,11 @@
 
     {{#commits}}
       {{#ifCommitType . type='refactor'}}
- - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://gitlab.com/html-validate/html-validate/commit/{{hashFull}}))
+ - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://github.com/bsorrentino/pdf-tools/commit/{{hashFull}}))
+   {{#messageBodyItems}} 
+     > {{.}}
+   {{/messageBodyItems}}
+
       {{/ifCommitType}}
     {{/commits}}
 {{/ifContainsType}}
@@ -53,7 +69,11 @@
 
     {{#commits}}
       {{#ifCommitType . type='build'}}
- - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://gitlab.com/html-validate/html-validate/commit/{{hashFull}}))
+ - {{#eachCommitScope .}} **{{.}}** {{/eachCommitScope}} {{{commitDescription .}}} ([{{hash}}](https://github.com/bsorrentino/pdf-tools/commit/{{hashFull}}))
+   {{#messageBodyItems}} 
+     > {{.}}
+   {{/messageBodyItems}}
+
       {{/ifCommitType}}
     {{/commits}}
 {{/ifContainsType}}
