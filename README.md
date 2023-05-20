@@ -59,10 +59,11 @@ pdftools pdf2md|p2md [options] <pdf>
 
 **Options:**
 ```
-  --stats     print stats information
-  --debug     print debug information
-```
-
+  -ps, --pageseparator [separator]  add page separator (default: "---")
+  --imageurl [url prefix]           imgage url prefix
+  --stats                           print stats information
+  --debug                           print debug information
+  ```
 ----
 
 ## Conversion to Markdown 
@@ -73,7 +74,7 @@ pdftools pdf2md|p2md [options] <pdf>
 * Detect and extract images 
 * Extract plain text 
 * Extract fonts and allow custom mapping through a generated file `<document name>.font.json`
-  > Supported fonts **bold**, _italic_, `monspace`, **_bold+italic_**
+  > Supported fonts **bold**, _italic_, `monospace`, **_bold+italic_**
 * Detect code block ( i.e. ` ``` `)
 * Detect external link
 
