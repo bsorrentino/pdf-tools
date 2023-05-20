@@ -64,7 +64,8 @@ export async function pdfToMarkdown(pdfPath: string) {
     }
 
     const content = pages.map( page => toMarkdown( page ) )
-                          .reduce( (result, pageText ) => result.concat(pageText), '')
+                        .map( text => (globals.pageSeparator) ? `${text}\n\n${globals.pageSeparator}\n\n` : text ) 
+                        .reduce( (result, pageText ) => result.concat(pageText), '')
 
     await writeFile( outFile, content )
 

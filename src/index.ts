@@ -167,15 +167,25 @@ export async function run() {
       program.command('pdf2md <pdf>')
       .description('convert pdf to markdown format.')
       .alias('p2md')
+      .option('-ps, --pageseparator [separator]', 'add page separator', '---')
       .option('--imageurl [url prefix]', 'imgage url prefix')
       .option('--stats', 'print stats information')
       .option('--debug', 'print debug information')
       .action(async (pdfPath, cmdobj) => {
-
+        console.debug( cmdobj )
         globals.outDir = await createFolderIfDoesntExist(choosePath( pdfPath, cmdobj))
 
         if( cmdobj.imageurl) {
           globals.imageUrlPrefix = cmdobj.imageurl
+        }
+
+        if( cmdobj.pageseparator ) {
+          if( typeof(cmdobj.pageseparator) === 'string' ) {
+            globals.pageSeparator = cmdobj.pageseparator
+          }
+          else {
+            globals.pageSeparator = '---'
+          }
         }
 
         globals.options.debug = cmdobj.debug
