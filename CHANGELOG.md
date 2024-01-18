@@ -1,6 +1,37 @@
 # Changelog
 
 
+
+## [Unreleased](https://github.com/bsorrentino/pdf-tools/releases/tag/Unreleased) ()
+
+
+
+
+
+
+
+"name: v1.2.0" is a release tag
+
+## [v1.2.0](https://github.com/bsorrentino/pdf-tools/releases/tag/v1.2.0) (2024-01-18)
+
+
+### Bug Fixes
+
+ -  apply the update suggested on https://github.com/mozilla/pdf.js/issues/13742 ([2198ad5777739b1](https://github.com/bsorrentino/pdf-tools/commit/2198ad5777739b16abe198f7ab3c4074945b0658))
+
+
+### Documentation
+
+ -  **CHANGELOG.md**  update after tag ([53f8a0ab98a95a9](https://github.com/bsorrentino/pdf-tools/commit/53f8a0ab98a95a92e384837a34b6acd8c0f234e3))
+
+
+
+### ALM 
+
+ -  move version to next release ([1f5db84af27a65d](https://github.com/bsorrentino/pdf-tools/commit/1f5db84af27a65dcfa573dfdd1aeffd3ccf6110b))
+
+
+
 "name: v1.1.0" is a release tag
 
 ## [v1.1.0](https://github.com/bsorrentino/pdf-tools/releases/tag/v1.1.0) (2023-05-20)
@@ -22,12 +53,6 @@
      > add option to enable page separator
      > issue #6
 
- -  update changelog ([f665d3ef54917b9](https://github.com/bsorrentino/pdf-tools/commit/f665d3ef54917b95dcd57bae0cf250cae9889437))
-
-
-### Refactor
-
- -  upgrade pdf-dist version, build on nodejs 16 and test also on macos M1 ([91952e262b18918](https://github.com/bsorrentino/pdf-tools/commit/91952e262b189185068c2fe8e3bf46de942ca811))
 
 
 ### ALM 
@@ -37,8 +62,6 @@
      > issue #6
 
  -  **package.json**  move to next release ([bf4d30b4c46ed7f](https://github.com/bsorrentino/pdf-tools/commit/bf4d30b4c46ed7f5a240d4aabb0fd8c6a43a024c))
-
- -  configure standard-version changelog template ([e29d8b6153b9db4](https://github.com/bsorrentino/pdf-tools/commit/e29d8b6153b9db47b489585930d89d3167810cf6))
 
 
 
@@ -82,7 +105,19 @@
 
 
 
+### Documentation
 
+ -  update changelog ([f665d3ef54917b9](https://github.com/bsorrentino/pdf-tools/commit/f665d3ef54917b95dcd57bae0cf250cae9889437))
+
+
+### Refactor
+
+ -  upgrade pdf-dist version, build on nodejs 16 and test also on macos M1 ([91952e262b18918](https://github.com/bsorrentino/pdf-tools/commit/91952e262b189185068c2fe8e3bf46de942ca811))
+
+
+### ALM 
+
+ -  configure standard-version changelog template ([e29d8b6153b9db4](https://github.com/bsorrentino/pdf-tools/commit/e29d8b6153b9db47b489585930d89d3167810cf6))
 
 
 
