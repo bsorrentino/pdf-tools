@@ -68,13 +68,19 @@ async function extractImagesfromPages(pdfPath: string) {
 
       const ops = await page.getOperatorList()
 
+      const ImageFromOp = (op: string):PDFImage => 
+        op.startsWith('g_') ?
+          page.commonObjs.get(op)  :
+          page.objs.get(op);
+    
+
       for (let j = 0; j < ops.fnArray.length; j++) {
 
         if (ops.fnArray[j] == OPS.paintJpegXObject || ops.fnArray[j] == OPS.paintImageXObject) {
 
           const op = ops.argsArray[j][0];
-
-          const img = page.objs.get(op) as PDFImage;
+          
+          const img = ImageFromOp(op);
 
           //const scale = img.width / page._pageInfo.view[2];
 
