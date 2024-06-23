@@ -1,12 +1,32 @@
 # Changelog
 
 
+"name: v1.2.1" is a release tag
 
-## [Unreleased](https://github.com/bsorrentino/pdf-tools/releases/tag/Unreleased) ()
+## [v1.2.1](https://github.com/bsorrentino/pdf-tools/releases/tag/v1.2.1) (2024-06-23)
+
+
+### Bug Fixes
+
+ -  support of outdir ([284aedcdb451939](https://github.com/bsorrentino/pdf-tools/commit/284aedcdb4519395f93cb716a163dbad0928a94a))
+     > resolve #8
 
 
 
+### Refactor
 
+ -  upgrade commander package ([80e0f49c38c05ea](https://github.com/bsorrentino/pdf-tools/commit/80e0f49c38c05ea78b38faec27eb1a54cab3dd16))
+     > make compliant with new commander requirements
+     > work on #8
+
+
+### ALM 
+
+ -  move to next version ([0e88a8c9ca64203](https://github.com/bsorrentino/pdf-tools/commit/0e88a8c9ca6420330f849d30684b4ddd1ddef0a5))
+
+ -  remove package-lock.json from git ([3577148df8312bc](https://github.com/bsorrentino/pdf-tools/commit/3577148df8312bc5c18d3cb6a566532a86707612))
+
+ -  update git ignore ([e3518a329e5398f](https://github.com/bsorrentino/pdf-tools/commit/e3518a329e5398f66196191c185d7a35ab39cd4e))
 
 
 
