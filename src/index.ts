@@ -5,7 +5,7 @@ import path from 'path';
 import { writePageAsImage, writePageImageOrReuseOneFromCache } from './pdf2md.image';
 import { globals } from './pdf2md.global';
 
-import { program } from 'commander'
+import { Command } from 'commander'
 import { assert } from 'console';
 import { pdfToMarkdown } from './pdf2md.main';
 import { getDocument, OPS } from 'pdfjs-dist/legacy/build/pdf.js'
@@ -144,8 +144,11 @@ export async function run() {
 
     const {version} = require('../package.json')
   
-    program.version( version )
+    const program = new Command()
+
+    program
     .name('pdftools')
+    .version( version, '-v, --version', 'output the current version' )
     // fix issue #8
     // .option('-o, --outdir [folder]', 'output folder' )
 
