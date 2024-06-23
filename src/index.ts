@@ -135,7 +135,7 @@ async function savePagesAsImages(pdfPath: string) {
   }
 }
 
-export async function run() {
+export async function run(): Promise<Command> {
 
   const choosePath = ( pdfPath:any, cmdobj:any ) => 
               ( cmdobj?.outdir ) ? 

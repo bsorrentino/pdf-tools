@@ -6,7 +6,7 @@ import { EnhancedWord, Rect, Word, Image, Font } from "./pdf2md.model";
 import { OPS, PDFPageProxy, Util } from 'pdfjs-dist/legacy/build/pdf.js'
 // doesn't work with parcel
 import { getLinks, matchLink } from "./pdf2md.link";
-import { TextItem } from "pdfjs-dist/types/src/display/api";
+import type { TextItem } from "pdfjs-dist/types/src/display/api";
 
 
 type TransformationMatrix = [

@@ -1,0 +1,7 @@
+{
+  "name": "@bsorrentino/pdf-tools",
+  "version": "1.2.1",
+  "exports": "./src/index.ts",
+  "publish": {    
+  }  
+}
