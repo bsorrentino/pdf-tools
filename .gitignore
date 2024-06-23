@@ -13,3 +13,4 @@ bin/
 out/
 private/
 tmp/
+package-lock.json
