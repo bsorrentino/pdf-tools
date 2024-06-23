@@ -5,7 +5,7 @@ import path from 'path';
 import { writePageAsImage, writePageImageOrReuseOneFromCache } from './pdf2md.image';
 import { globals } from './pdf2md.global';
 
-import { program } from 'commander'
+import { Command } from 'commander'
 import { assert } from 'console';
 import { pdfToMarkdown } from './pdf2md.main';
 import { getDocument, OPS } from 'pdfjs-dist/legacy/build/pdf.js'
@@ -138,19 +138,24 @@ async function savePagesAsImages(pdfPath: string) {
 export async function run() {
 
   const choosePath = ( pdfPath:any, cmdobj:any ) => 
-              ( cmdobj.parent?.outdir ) ? 
-                            cmdobj.parent.outdir : 
+              ( cmdobj?.outdir ) ? 
+                            cmdobj.outdir : 
                             path.basename(pdfPath, '.pdf')
 
     const {version} = require('../package.json')
   
-    program.version( version )
+    const program = new Command()
+
+    program
     .name('pdftools')
-    .option('-o, --outdir [folder]', 'output folder' )
+    .version( version, '-v, --version', 'output the current version' )
+    // fix issue #8
+    // .option('-o, --outdir [folder]', 'output folder' )
 
     program.command('pdfximages <pdf>')
       .description('extract images (as png) from pdf and save it to the given folder')
       .alias('pxi')
+      .option('-o, --outdir [folder]', 'output folder' ) // fix issue #8
       .action( async (pdfPath, cmdobj) => {
 
         globals.outDir = await createFolderIfDoesntExist(choosePath( pdfPath, cmdobj))
@@ -162,6 +167,7 @@ export async function run() {
     program.command('pdf2images <pdf>')
       .description('create an image (as png) for each pdf page')
       .alias('p2i')
+      .option('-o, --outdir [folder]', 'output folder' ) // fix issue #8
       .action(async (pdfPath, cmdobj) => {
 
         globals.outDir = await createFolderIfDoesntExist(choosePath( pdfPath, cmdobj))
@@ -173,12 +179,13 @@ export async function run() {
       program.command('pdf2md <pdf>')
       .description('convert pdf to markdown format.')
       .alias('p2md')
+      .option('-o, --outdir [folder]', 'output folder' ) // fix issue #8
       .option('-ps, --pageseparator [separator]', 'add page separator', '---')
       .option('--imageurl [url prefix]', 'imgage url prefix')
       .option('--stats', 'print stats information')
       .option('--debug', 'print debug information')
       .action(async (pdfPath, cmdobj) => {
-        console.debug( cmdobj )
+        console.debug( 'cmdobj:', cmdobj )
         globals.outDir = await createFolderIfDoesntExist(choosePath( pdfPath, cmdobj))
 
         if( cmdobj.imageurl) {
