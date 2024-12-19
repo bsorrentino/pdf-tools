@@ -1,13 +1,14 @@
 import assert from "assert";
-
 import { Enumify } from "enumify";
 import { globals } from './pdf2md.global';
 import { ItemTransformer, Word } from "./pdf2md.model";
 import { Page, Row } from "./pdf2md.page";
-
-
+/**
+ * Transforms an item into a text string.
+ * @param {string} item - The item to be transformed.
+ * @returns {string} The transformed text string.
+ */
 type ToText = ItemTransformer<string>
-
 // An Markdown block
 class BlockType extends Enumify {
 
@@ -78,18 +79,33 @@ class BlockType extends Enumify {
     */
     static _ = BlockType.closeEnum()
 }
-
-
+/**
+ * Determines whether a given block type is a headline.
+ *
+ * @param {BlockType} type - The block type to check.
+ * @returns {boolean} True if the block type is a headline, false otherwise.
+ */
 export function isHeadline(type: BlockType) {
     return type && type.enumKey.length == 2 && type.enumKey[0] === 'H'
 }
-
+/**
+ * Formats the input text by adding a prefix and suffix, handling trailing spaces.
+ *
+ * @function formatTextDetectingTrailingSpaces
+ * @param {string} text - The input text to be formatted.
+ * @param {string} prefix - The prefix to add to the text.
+ * @param {string} [suffix=prefix] - The suffix to add to the text, default is the same as prefix.
+ * @returns {string} The formatted text with prefix and suffix added.
+ */
 const  formatTextDetectingTrailingSpaces = ( text:string, prefix:string, suffix?:string ) =>  {
     if( !suffix ) suffix = prefix
     const rx = /^(.+[^\s]?)(\s*)$/.exec(text)
     return ( rx ) ? `${prefix}${rx[1]}${suffix}${rx[2]}` : 'null'
 }
-
+/**
+ * @type {WordFormat}
+ * @readonly
+ */
 export default class WordFormat extends Enumify {
 
     constructor( public toText:ToText ) { super() }
@@ -104,17 +120,17 @@ export default class WordFormat extends Enumify {
 
     static _ = WordFormat.closeEnum()
 }
-
 // export function blockToText(block: LineItemBlock) {
 //     if (!block.type) {
 //         return linesToText(block.items, false);
 //     }
 //     return block.type.toText(block);
 // }
-
 /**
- * 
- * @param level 
+ * Determines the block type based on the given level.
+ *
+ * @param {number} level - The level of the block, expected to be between 1 and 6.
+ * @returns {BlockType} The corresponding BlockType enum value for the given level or BLOCK_TYPE.OVERFLOW if the level is unsupported.
  */
 function blockTypeByLevel(level: number):BlockType {
 
@@ -129,11 +145,9 @@ function blockTypeByLevel(level: number):BlockType {
 
     return blockType as BlockType
 }
-
 /**
- * 
- * @param row 
- * @param globals 
+ * Detects and processes headers in a row based on certain criteria.
+ * @param {Row} row - The row containing enhanced text to be processed.
  */
 function detectHeaders(row: Row) {
 
@@ -156,7 +170,11 @@ function detectHeaders(row: Row) {
     }
 
 }
-
+/**
+ * Detect and apply font transformations to each enhanced text in a row.
+ *
+ * @param {Row} row - The current row object containing enhanced text elements.
+ */
 function detectFonts(row: Row ) {
 
     row.enhancedText.forEach( etext => {
@@ -189,10 +207,8 @@ function detectFonts(row: Row ) {
 
     })
 }
-
 // class Stack<T> {
 //     private _values = Array<T>();
-
 //     push( value:T ) {
 //         this._values.push(value);
 //     }
@@ -207,12 +223,22 @@ function detectFonts(row: Row ) {
 //         }
 //     }
 // }
-
+/**
+ * Represents a code block with a start position, an end position, and a associated word.
+ * @typedef {Object} CodeBlock
+ * @property {number} start - The starting index of the code block.
+ * @property {number} end - The ending index of the code block.
+ * @property {Word} word - The word associated with the code block.
+ */
 type CodeBlock = {
     start:number; 
     end:number 
-    word:Word} 
-
+    word:Word}
+/**
+ * Detects code blocks in a given page by identifying rows containing monospace or code font.
+ * 
+ * @param {Page} page - The page to detect code blocks in.
+ */
 function detectCodeBlock(page: Page) {
 
     const codeFontId = globals.getFontIdByName('monospace') || globals.getFontIdByName('code')
@@ -264,7 +290,12 @@ function detectCodeBlock(page: Page) {
 
     })
 }
-
+/**
+ * Converts a Page object to Markdown format.
+ *
+ * @param {Page} page - The Page object to convert to Markdown.
+ * @returns {string} The Markdown representation of the page.
+ */
 export function toMarkdown(page: Page ) {
     // const pageContainsMaxHeight = 
     //     page.rows.filter(row => 
@@ -293,4 +324,4 @@ export function toMarkdown(page: Page ) {
 
     }, init)
 
-} 
+}

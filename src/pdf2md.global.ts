@@ -2,17 +2,33 @@ import assert from "assert";
 import path from 'path'
 import fs from 'fs'
 import { promisify } from 'util'
-
 const checkFileExistsAsync = promisify(fs.access)
 const readFileAsync = promisify(fs.readFile)
 const writeFileAsync = promisify(fs.writeFile)
-
+/**
+ * @interface Font
+ * @description An interface representing a font.
+ * @property {string | null} name - The name of the font, can be null if not specified.
+ */
 interface Font {
     name: string | null
 }
-
+/**
+ * Represents a font statistic by extending the base `Font` type with an additional property for occurrence count.
+ * @typedef {Object} FontStat
+ * @property {Font} baseProps - The properties of a font.
+ * @property {number} occurrence - The number of times the font occurs.
+ */
 type FontStat = Font & { occurrence: number }
-
+/**
+ * Represents statistical data from a document or similar.
+ * @property {string} mostUsedFont - The font used most frequently, identified by its ID.
+ * @property {number} mostUsedTextHeight - The height of the text that is most commonly used.
+ * @property {number} maxTextHeight - The maximum height of any text within the document.
+ * @property {Array<number>} textHeigths - An array containing the heights of all texts encountered.
+ * @property {string | null} maxHeightFont - The font with the maximum height if applicable, or null otherwise.
+ * @property {number} mostUsedTextDistanceY - The vertical distance (in pixels) for the text that is most often seen.
+ */
 export interface Stats {
     mostUsedFont: string // fontId
     mostUsedTextHeight: number
@@ -21,7 +37,6 @@ export interface Stats {
     maxHeightFont: string | null
     mostUsedTextDistanceY: number
 }
-
 class Globals {
 
     private _fontMap = new Map<string, FontStat>()
@@ -207,5 +222,4 @@ class Globals {
         
     }
 }
-
 export const globals = new Globals()

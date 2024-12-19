@@ -2,13 +2,21 @@ import assert from "assert";
 import { globals } from "./pdf2md.global";
 import { writePageImageOrReuseOneFromCache } from "./pdf2md.image";
 import { EnhancedWord, Rect, Word, Image, Font } from "./pdf2md.model";
-
 import { OPS, PDFPageProxy, Util } from 'pdfjs-dist/legacy/build/pdf.js'
 // doesn't work with parcel
 import { getLinks, matchLink } from "./pdf2md.link";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
-
-
+/**
+ * Represents a transformation matrix used for scaling and translating 2D points.
+ *
+ * @typedef {Object} TransformationMatrix
+ * @property {number} scalex - The x-component of the scale.
+ * @property {number} skevX - The skew factor in the X direction.
+ * @property {number} skevY - The skew factor in the Y direction.
+ * @property {number} scaleY - The y-component of the scale.
+ * @property {number} transformX - The translation in the X direction.
+ * @property {number} transformY - The translation in the Y direction.
+ */
 type TransformationMatrix = [
     scalex: number,
     skevX: number,
@@ -16,8 +24,16 @@ type TransformationMatrix = [
     scaleY: number,
     transformX: number,
     transformY: number]
-
-
+/**
+ * Represents the layout and content of a console.
+ * @property {number | undefined} x - The x-coordinate of the element.
+ * @property {number | undefined} y - The y-coordinate of the element.
+ * @property {number | undefined} width - The width of the element.
+ * @property {number | undefined} height - The height of the element.
+ * @property {string | undefined} image - The URL or data URI of an image to display.
+ * @property {string | undefined} font - The name and size of a font for text elements.
+ * @property {string | undefined} text - The text content to be displayed.
+ */
 type ConsoleFormat = {
     x?: number
     y?: number
@@ -27,7 +43,6 @@ type ConsoleFormat = {
     font?: string
     text?: string
 }
-
 class ConsoleOutput {
 
     lines = Array<ConsoleFormat>()
@@ -75,8 +90,9 @@ class ConsoleOutput {
     }
 
 }
-
-
+/**
+ * Represents a row of elements.
+ */
 export class Row {
     y: number
     private _images?: Array<Image>
@@ -153,7 +169,6 @@ export class Row {
         return this._etextArray.findIndex( etext => etext.height == height ) >= 0
     }
 }
-
 /**
  * 
  */
@@ -225,11 +240,16 @@ export class Page {
     }
 
 }
-
+/**
+ * Merges two arrays of Rect objects.
+ *
+ * @param {Array<Rect>} a - The first array of Rect objects.
+ * @param {Array<Rect>} b - The second array of Rect objects.
+ * @returns {Array<Rect>} A new array containing all Rect objects from both input arrays.
+ */
 function mergeItemsArray(a: Array<Rect>, b: Array<Rect>): Array<Rect> {
     return a.concat(b)
 }
-
 // A page which holds PageItems displayable via PdfPageView
 export async function processPage(page: PDFPageProxy) {
 
@@ -380,5 +400,3 @@ export async function processPage(page: PDFPageProxy) {
 
     return resultPage
 }
-
-
