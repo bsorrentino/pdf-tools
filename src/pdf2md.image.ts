@@ -23,11 +23,6 @@ type ImageData = {
 }
 const imagesCache = new Map<ImageHash,Array<ImageData>>();
 
-/**
- * 
- * @param img 
- * @param name 
- */
 export async function writePageImageOrReuseOneFromCache(img:PDFImage, name:ImageName):Promise<ImageName> {
 
     //console.log( `image ${name} - kind: ${img.kind}`)
@@ -145,10 +140,6 @@ export async function writePageImageOrReuseOneFromCache(img:PDFImage, name:Image
     }
   }
   
-  /**
-   * 
-   * @param page 
-   */
   export async function writePageAsImage( page:PDFPageProxy ) {
         // Render the page on a Node canvas with 100% scale.
         const viewport = page.getViewport({ scale: 1.0 });
