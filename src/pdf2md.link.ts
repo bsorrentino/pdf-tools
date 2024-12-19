@@ -2,21 +2,10 @@
 import { PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.js'
 import { Rect } from "./pdf2md.model"
 
-/**
- * 
- * @param rect 
- * @param link 
- * @returns 
- */
 export const matchLink = <T extends Rect>(rect:T, link:PDFLink) => 
   (rect.x >= link.x1 && rect.x + rect.width <= link.x2) &&
   (rect.y >= link.y1 && rect.y + rect.height <= link.y2)
 
-/**
- * 
- * @param page 
- * @returns 
- */
 export async function getLinks( page:PDFPageProxy ):Promise<PDFLink[]> {
 
   const annotations = await page.getAnnotations() as Array<PDFAnnotation>
