@@ -22,10 +22,6 @@ const readFile = promisify(fs.readFile)
 const checkFileExistsAsync = promisify(fs.access)
 const mkdirAsync = promisify(fs.mkdir)
 
-/**
- * 
- * @param path 
- */
 async function createFolderIfDoesntExist(path: string) {
 
   assert(path, `provided path is not valid`)
@@ -41,10 +37,6 @@ async function createFolderIfDoesntExist(path: string) {
   return path
 }
 
-/**
- * 
- * @param pdfPath 
- */
 async function extractImagesfromPages(pdfPath: string) {
 
   try {
@@ -99,10 +91,6 @@ async function extractImagesfromPages(pdfPath: string) {
 }
 
 
-/**
- * 
- * @param pdfPath 
- */
 async function savePagesAsImages(pdfPath: string) {
 
   try {
