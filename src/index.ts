@@ -1,27 +1,27 @@
 import fs from 'fs'
 import { promisify } from 'util'
 import path from 'path';
-
 import { writePageAsImage, writePageImageOrReuseOneFromCache } from './pdf2md.image';
 import { globals } from './pdf2md.global';
-
 import { Command } from 'commander'
 import { assert } from 'console';
 import { pdfToMarkdown } from './pdf2md.main';
 import { getDocument, OPS } from 'pdfjs-dist/legacy/build/pdf.js'
-
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
-
 // Where the standard fonts are located.
 const STANDARD_FONT_DATA_URL =
   "../../../node_modules/pdfjs-dist/standard_fonts/";
-
 const readFile = promisify(fs.readFile)
 const checkFileExistsAsync = promisify(fs.access)
 const mkdirAsync = promisify(fs.mkdir)
-
+/**
+ *  createFolderIfDoesntExist - Checks if a folder exists at a given path. If it does not exist, it attempts to create the folder.
+ *
+ * @param {string} path - The path of the folder to check or create.
+ * @returns {Promise<string>} A promise that resolves with the provided path once the operation is complete.
+ */
 async function createFolderIfDoesntExist(path: string) {
 
   assert(path, `provided path is not valid`)
@@ -36,7 +36,11 @@ async function createFolderIfDoesntExist(path: string) {
 
   return path
 }
-
+/**
+ * Extracts images from PDF pages asynchronously.
+ *
+ * @param pdfPath - The file path of the PDF to process.
+ */
 async function extractImagesfromPages(pdfPath: string) {
 
   try {
@@ -89,8 +93,11 @@ async function extractImagesfromPages(pdfPath: string) {
     console.log(reason)
   }
 }
-
-
+/** 
+ * Save each page of a PDF file as an image.
+ * @param {string} pdfPath - The path to the PDF file to save images from.
+ * @returns {Promise<void>} A promise that resolves when all pages have been saved as images, or rejects if any errors occur.
+ */
 async function savePagesAsImages(pdfPath: string) {
 
   try {
@@ -122,7 +129,10 @@ async function savePagesAsImages(pdfPath: string) {
     console.log(reason)
   }
 }
-
+/**
+ * Asynchronously runs a command based on user input.
+ * @returns {Promise<Command>} - A promise that resolves to the parsed command object.
+ */
 export async function run(): Promise<Command> {
 
   const choosePath = ( pdfPath:any, cmdobj:any ) => 
