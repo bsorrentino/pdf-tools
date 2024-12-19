@@ -112,10 +112,7 @@ export default class WordFormat extends Enumify {
 //     return block.type.toText(block);
 // }
 
-/**
- * 
- * @param level 
- */
+
 function blockTypeByLevel(level: number):BlockType {
 
     const blockType = BlockType.enumValues.find( e => e.enumKey == `H${level}` ) 
@@ -130,11 +127,6 @@ function blockTypeByLevel(level: number):BlockType {
     return blockType as BlockType
 }
 
-/**
- * 
- * @param row 
- * @param globals 
- */
 function detectHeaders(row: Row) {
 
     if (row.enhancedText.length == 1) {
