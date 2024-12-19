@@ -1,27 +1,26 @@
 import fs from 'fs'
 import path from 'path'
-
 import { promisify } from 'util'
-
-
 import { processPage, Page } from './pdf2md.page';
 import { toMarkdown } from './pdf2md.markdown';
 import { globals } from './pdf2md.global';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.js'
-
 // Some PDFs need external cmaps.
 const CMAP_URL = "../../../node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
-
 // Where the standard fonts are located.
 const STANDARD_FONT_DATA_URL =
   "../../../node_modules/pdfjs-dist/standard_fonts/";
-
 const readFile = promisify(fs.readFile)
 const writeFile = promisify(fs.writeFile)
-
-
-
+/**
+ * Converts a PDF file to Markdown format.
+ *
+ * @async
+ * @function pdfToMarkdown
+ * @param {string} pdfPath - The path to the PDF file to be converted.
+ * @returns {Promise<void>} A promise that resolves when the conversion is complete.
+ */
 export async function pdfToMarkdown(pdfPath: string) {
 
   try {
